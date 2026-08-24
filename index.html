@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Read Ease - Mobile Optimized</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; touch-action: manipulation; }
@@ -35,6 +37,7 @@
         .book-info { flex-grow: 1; cursor: pointer; padding: 10px; }
         .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .book-author { font-size: 0.9em; color: #666; }
+        .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; }
         
         input[type="text"] { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 18px; margin: 10px 0; font-family: inherit; }
         
@@ -85,9 +88,9 @@
         <div class="upload-area" onclick="document.getElementById('file-input').click()">
             <div class="upload-icon">📤</div>
             <div style="font-size: 18px; font-weight: bold;">Tap to Upload Book</div>
-            <div style="color: #666; margin-top: 5px;">Supports: TXT files</div>
+            <div style="color: #666; margin-top: 5px;">Supports: PDF, EPUB, TXT, HTML</div>
         </div>
-        <input type="file" id="file-input" accept=".txt,text/plain" onchange="handleUpload(event)">
+        <input type="file" id="file-input" accept=".txt,.pdf,.epub,.html,text/*,application/pdf,application/epub+zip" onchange="handleUpload(event)">
         
         <h2>Preloaded Books</h2>
         <div id="preloaded-list"></div>
@@ -109,8 +112,8 @@
         <div id="search-results"></div>
         <div class="nav">
             <button onclick="showSection('library')">📚 Library</button>
-            <button class="active" onclick="showSection('download')">🔍 Download</button>
-            <button onclick="showSection('settings')">️ Settings</button>
+            <button class="active" onclick="showSection('download')"> Download</button>
+            <button onclick="showSection('settings')">⚙️ Settings</button>
         </div>
     </div>
 
@@ -126,8 +129,8 @@
         <button class="btn btn-secondary" onclick="setTheme('high-contrast')">High Contrast</button>
         
         <div class="nav">
-            <button onclick="showSection('library')"> Library</button>
-            <button onclick="showSection('download')">🔍 Download</button>
+            <button onclick="showSection('library')">📚 Library</button>
+            <button onclick="showSection('download')"> Download</button>
             <button class="active" onclick="showSection('settings')">⚙️ Settings</button>
         </div>
     </div>
@@ -136,7 +139,7 @@
         <div id="reader-header">
             <button class="btn btn-secondary" onclick="closeReader()" style="padding: 10px 15px;">← Back</button>
             <h2 id="reader-title" style="margin:0; flex-grow:1; text-align:center; font-size: 16px;"></h2>
-            <button class="btn btn-danger" onclick="deleteBook()" style="padding: 10px 15px;">️</button>
+            <button class="btn btn-danger" onclick="deleteBook()" style="padding: 10px 15px;">🗑️</button>
         </div>
         <div id="reader-content"></div>
         <div id="reader-controls">
@@ -147,6 +150,8 @@
     </div>
 
     <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
         let books = JSON.parse(localStorage.getItem('myBooks') || '[]');
         let currentBook = null;
         let isSpeaking = false;
@@ -158,12 +163,14 @@
                 id: 'pre1',
                 title: 'Alice in Wonderland',
                 author: 'Lewis Carroll',
+                type: 'TXT',
                 content: '<h2>Chapter 1: Down the Rabbit-Hole</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, and what is the use of a book, thought Alice without pictures or conversations?</p><p>So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.</p><p>There was nothing so VERY remarkable in that; nor did Alice think it so VERY much out of the way to hear the Rabbit say to itself, Oh dear! Oh dear! I shall be late!</p>'
             },
             {
                 id: 'pre2',
                 title: "Aesop's Fables",
                 author: 'Aesop',
+                type: 'TXT',
                 content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow. Do you ever get anywhere? he asked with a mocking laugh.</p><p>Yes, replied the Tortoise, and I get there sooner than you think. I will run you a race and prove it.</p><p>The Hare was much amused at the idea of running a race with the Tortoise, but for the fun of the thing he agreed. So the Fox, who had consented to act as judge, marked the distance and started the runners off.</p>'
             }
         ];
@@ -182,6 +189,7 @@
                         <div class="book-info">
                             <div class="book-title">${book.title}</div>
                             <div class="book-author">${book.author}</div>
+                            <div class="book-type">${book.type}</div>
                         </div>
                         <div style="font-size: 24px;">📖</div>
                     </div>
@@ -202,6 +210,7 @@
                         <div class="book-info" onclick="openBook('${book.id}', false)">
                             <div class="book-title">${book.title}</div>
                             <div class="book-author">${book.author}</div>
+                            <div class="book-type">${book.type}</div>
                         </div>
                         <button class="btn btn-danger" onclick="deleteMyBook(${index}, event)" style="padding: 10px; margin: 5px;">🗑️</button>
                     </div>
@@ -217,7 +226,7 @@
             event.target.classList.add('active');
         }
 
-        function handleUpload(event) {
+        async function handleUpload(event) {
             const file = event.target.files[0];
             if (!file) {
                 alert('No file selected');
@@ -226,52 +235,99 @@
             
             console.log('Uploading:', file.name, file.type, file.size);
             
-            if (!file.name.endsWith('.txt')) {
-                alert('Please upload a TXT file. Other formats coming soon!');
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File too large. Max size: 10MB');
                 return;
             }
             
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File too large. Max size: 5MB');
-                return;
-            }
+            const ext = file.name.split('.').pop().toLowerCase();
+            alert(`Processing ${file.name}...`);
             
-            const reader = new FileReader();
-            
-            reader.onerror = function() {
-                alert('Error reading file');
-            };
-            
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    console.log('File loaded, length:', content.length);
-                    
-                    if (!content || content.trim().length === 0) {
-                        alert('File is empty');
-                        return;
+            try {
+                let content = '';
+                let bookType = ext.toUpperCase();
+                
+                if (ext === 'txt' || ext === 'html') {
+                    content = await readFileAsText(file);
+                    if (ext === 'txt') {
+                        content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
                     }
-                    
-                    const paragraphs = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                    
-                    const book = {
-                        id: 'book_' + Date.now(),
-                        title: file.name.replace('.txt', '').replace(/_/g, ' '),
-                        author: 'Uploaded',
-                        content: paragraphs
-                    };
-                    
-                    books.push(book);
-                    localStorage.setItem('myBooks', JSON.stringify(books));
-                    renderMyBooks();
-                    alert('✅ Book uploaded successfully!');
-                    event.target.value = '';
-                } catch (err) {
-                    alert('Error processing file: ' + err.message);
+                } else if (ext === 'pdf') {
+                    content = await extractPDFText(file);
+                } else if (ext === 'epub') {
+                    content = await extractEPUBText(file);
+                } else {
+                    alert('Unsupported file type');
+                    return;
                 }
-            };
+                
+                if (!content || content.trim().length < 50) {
+                    alert('Could not extract text from file');
+                    return;
+                }
+                
+                const book = {
+                    id: 'book_' + Date.now(),
+                    title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
+                    author: 'Uploaded',
+                    type: bookType,
+                    content: content
+                };
+                
+                books.push(book);
+                localStorage.setItem('myBooks', JSON.stringify(books));
+                renderMyBooks();
+                alert('✅ Book uploaded successfully!');
+                event.target.value = '';
+            } catch (err) {
+                console.error(err);
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        async function extractPDFText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let fullText = '';
             
-            reader.readAsText(file);
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += `<h2>Page ${i}</h2><p>${pageText}</p>`;
+            }
+            
+            return fullText;
+        }
+
+        async function extractEPUBText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            let content = '';
+            
+            zip.forEach((path, zipEntry) => {
+                if (path.match(/\.(xhtml|html)$/i) && !path.includes('META')) {
+                    content += zipEntry.async('text');
+                }
+            });
+            
+            content = content.replace(/<script[\s\S]*?<\/script>/gi, '')
+                            .replace(/<style[\s\S]*?<\/style>/gi, '')
+                            .replace(/<[^>]+>/g, ' ')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+            
+            const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+            return paragraphs.map(p => `<p>${p.trim()}</p>`).join('') || '<p>Content extracted</p>';
         }
 
         async function searchBooks() {
@@ -306,6 +362,7 @@
                                 <div class="book-info">
                                     <div class="book-title">${book.title}</div>
                                     <div class="book-author">${author}</div>
+                                    <div class="book-type">TXT</div>
                                 </div>
                                 <button class="btn btn-success" onclick="downloadBook('${txtUrl}', '${book.title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button>
                             </div>
@@ -333,6 +390,7 @@
                     id: 'book_' + Date.now(),
                     title: title,
                     author: author,
+                    type: 'TXT',
                     content: paragraphs
                 };
                 
