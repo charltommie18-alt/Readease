@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Read Ease - Mobile Optimized</title>
+    <title>Read Ease - Final</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -13,33 +13,19 @@
         h1 { color: #2563eb; margin-bottom: 20px; font-size: 1.8em; }
         h2 { color: #2563eb; margin: 20px 0 10px 0; font-size: 1.3em; }
         
-        .btn { 
-            background: #2563eb; 
-            color: white; 
-            border: none; 
-            padding: 18px 20px; 
-            border-radius: 12px; 
-            font-size: 18px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            margin: 5px 0;
-            width: 100%;
-            touch-action: manipulation;
-            -webkit-appearance: none;
-        }
+        .btn { background: #2563eb; color: white; border: none; padding: 18px 20px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 5px 0; width: 100%; touch-action: manipulation; }
         .btn:active { transform: scale(0.98); }
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
         .btn-success { background: #10b981; }
         
-        .book-card { background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
-        .book-card:active { background: #e5e7eb; }
+        .book-card { background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
         .book-info { flex-grow: 1; cursor: pointer; padding: 10px; }
         .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .book-author { font-size: 0.9em; color: #666; }
         .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; }
         
-        input[type="text"] { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 18px; margin: 10px 0; font-family: inherit; }
+        input[type="text"] { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 18px; margin: 10px 0; }
         
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
@@ -47,44 +33,21 @@
         #reader-controls { display: flex; gap: 10px; padding: 15px 0; border-top: 2px solid #2563eb; flex-wrap: wrap; }
         #reader-controls .btn { flex: 1; min-width: 100px; }
         
-        .alert { background: #fee; color: #c00; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #c00; }
-        .success { background: #efe; color: #0c0; border-left-color: #0c0; }
-        
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #f3f4f6; display: flex; justify-content: space-around; padding: 15px 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .nav button { background: none; border: none; font-size: 14px; cursor: pointer; padding: 10px; flex: 1; }
         .nav button.active { color: #2563eb; font-weight: bold; border-bottom: 3px solid #2563eb; }
         
         #file-input { display: none; }
-        
-        .upload-area {
-            background: #e0e7ff;
-            border: 3px dashed #2563eb;
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            margin: 15px 0;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-        .upload-area:active { background: #c7d2fe; }
+        .upload-area { background: #e0e7ff; border: 3px dashed #2563eb; border-radius: 12px; padding: 30px 20px; text-align: center; margin: 15px 0; cursor: pointer; }
         .upload-icon { font-size: 48px; margin-bottom: 10px; }
-        
         .section { display: none; }
         .section.active { display: block; }
-        
-        @media (max-width: 600px) {
-            body { font-size: 16px; padding: 15px; }
-            h1 { font-size: 1.5em; }
-            .btn { padding: 15px; font-size: 16px; }
-            #reader-content { font-size: 18px; }
-        }
     </style>
 </head>
 <body>
 
     <div id="library-section" class="section active">
         <h1>📚 Read Ease</h1>
-        
         <div class="upload-area" onclick="document.getElementById('file-input').click()">
             <div class="upload-icon">📤</div>
             <div style="font-size: 18px; font-weight: bold;">Tap to Upload Book</div>
@@ -94,7 +57,6 @@
         
         <h2>Preloaded Books</h2>
         <div id="preloaded-list"></div>
-        
         <h2>My Books</h2>
         <div id="my-books-list"></div>
         
@@ -107,43 +69,41 @@
 
     <div id="download-section" class="section">
         <h1>🔍 Download Free Books</h1>
-        <input type="text" id="search-box" placeholder="Search (e.g., Sherlock, Alice)..." autocomplete="off">
+        <input type="text" id="search-box" placeholder="Search (e.g., Sherlock)..." autocomplete="off">
         <button class="btn" onclick="searchBooks()">Search Project Gutenberg</button>
         <div id="search-results"></div>
         <div class="nav">
             <button onclick="showSection('library')">📚 Library</button>
-            <button class="active" onclick="showSection('download')"> Download</button>
-            <button onclick="showSection('settings')">⚙️ Settings</button>
+            <button class="active" onclick="showSection('download')">🔍 Download</button>
+            <button onclick="showSection('settings')">️ Settings</button>
         </div>
     </div>
 
     <div id="settings-section" class="section">
-        <h1>⚙️ Settings</h1>
+        <h1>️ Settings</h1>
         <h2>Font Size: <span id="size-val">18</span>px</h2>
         <input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%; height: 40px;">
-        
         <h2 style="margin-top: 30px;">Theme</h2>
-        <button class="btn btn-secondary" onclick="setTheme('')">Normal (White)</button>
-        <button class="btn btn-secondary" onclick="setTheme('sepia')">Sepia (Warm)</button>
+        <button class="btn btn-secondary" onclick="setTheme('')">Normal</button>
+        <button class="btn btn-secondary" onclick="setTheme('sepia')">Sepia</button>
         <button class="btn btn-secondary" onclick="setTheme('dark')">Dark Mode</button>
         <button class="btn btn-secondary" onclick="setTheme('high-contrast')">High Contrast</button>
-        
         <div class="nav">
             <button onclick="showSection('library')">📚 Library</button>
-            <button onclick="showSection('download')"> Download</button>
-            <button class="active" onclick="showSection('settings')">⚙️ Settings</button>
+            <button onclick="showSection('download')">🔍 Download</button>
+            <button class="active" onclick="showSection('settings')">️ Settings</button>
         </div>
     </div>
 
     <div id="reader">
         <div id="reader-header">
-            <button class="btn btn-secondary" onclick="closeReader()" style="padding: 10px 15px;">← Back</button>
+            <button class="btn btn-secondary" onclick="closeReader()" style="padding: 10px 15px; width:auto;">← Back</button>
             <h2 id="reader-title" style="margin:0; flex-grow:1; text-align:center; font-size: 16px;"></h2>
-            <button class="btn btn-danger" onclick="deleteBook()" style="padding: 10px 15px;">🗑️</button>
+            <button class="btn btn-danger" onclick="deleteBook()" style="padding: 10px 15px; width:auto;">🗑️</button>
         </div>
         <div id="reader-content"></div>
         <div id="reader-controls">
-            <button class="btn" id="read-btn" onclick="toggleRead()">▶️ Read Aloud</button>
+            <button class="btn" id="read-btn" onclick="toggleRead()">▶️ Read</button>
             <button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none;">⏸️ Pause</button>
             <button class="btn btn-secondary" onclick="stopRead()">⏹️ Stop</button>
         </div>
@@ -157,266 +117,127 @@
         let isSpeaking = false;
         let isPaused = false;
         const synth = window.speechSynthesis;
+        
+        // TTS Chunking variables
+        let speechQueue = [];
+        let currentSpeechIndex = 0;
 
         const preloadedBooks = [
-            {
-                id: 'pre1',
-                title: 'Alice in Wonderland',
-                author: 'Lewis Carroll',
-                type: 'TXT',
-                content: '<h2>Chapter 1: Down the Rabbit-Hole</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, and what is the use of a book, thought Alice without pictures or conversations?</p><p>So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.</p><p>There was nothing so VERY remarkable in that; nor did Alice think it so VERY much out of the way to hear the Rabbit say to itself, Oh dear! Oh dear! I shall be late!</p>'
-            },
-            {
-                id: 'pre2',
-                title: "Aesop's Fables",
-                author: 'Aesop',
-                type: 'TXT',
-                content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow. Do you ever get anywhere? he asked with a mocking laugh.</p><p>Yes, replied the Tortoise, and I get there sooner than you think. I will run you a race and prove it.</p><p>The Hare was much amused at the idea of running a race with the Tortoise, but for the fun of the thing he agreed. So the Fox, who had consented to act as judge, marked the distance and started the runners off.</p>'
-            }
+            { id: 'pre1', title: 'Alice in Wonderland', author: 'Lewis Carroll', type: 'TXT', content: '<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it.</p><p>So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.</p>' },
+            { id: 'pre2', title: "Aesop's Fables", author: 'Aesop', type: 'TXT', content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow. Do you ever get anywhere? he asked with a mocking laugh.</p><p>Yes, replied the Tortoise, and I get there sooner than you think. I will run you a race and prove it.</p>' }
         ];
 
-        function init() {
-            renderPreloaded();
-            renderMyBooks();
-        }
+        function init() { renderPreloaded(); renderMyBooks(); }
 
         function renderPreloaded() {
             const container = document.getElementById('preloaded-list');
             container.innerHTML = '';
             preloadedBooks.forEach(book => {
-                container.innerHTML += `
-                    <div class="book-card" onclick="openBook('${book.id}', true)">
-                        <div class="book-info">
-                            <div class="book-title">${book.title}</div>
-                            <div class="book-author">${book.author}</div>
-                            <div class="book-type">${book.type}</div>
-                        </div>
-                        <div style="font-size: 24px;">📖</div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="book-card" onclick="openBook('${book.id}', true)"><div class="book-info"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><div style="font-size: 24px;">📖</div></div>`;
             });
         }
 
         function renderMyBooks() {
             const container = document.getElementById('my-books-list');
-            if (books.length === 0) {
-                container.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet.<br>Upload or download some!</p>';
-                return;
-            }
+            if (books.length === 0) { container.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet.</p>'; return; }
             container.innerHTML = '';
             books.forEach((book, index) => {
-                container.innerHTML += `
-                    <div class="book-card">
-                        <div class="book-info" onclick="openBook('${book.id}', false)">
-                            <div class="book-title">${book.title}</div>
-                            <div class="book-author">${book.author}</div>
-                            <div class="book-type">${book.type}</div>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteMyBook(${index}, event)" style="padding: 10px; margin: 5px;">🗑️</button>
-                    </div>
-                `;
+                container.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook('${book.id}', false)"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><button class="btn btn-danger" onclick="deleteMyBook(${index}, event)" style="padding: 10px; margin: 5px; width:auto;">🗑️</button></div>`;
             });
         }
 
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(section + '-section').classList.add('active');
-            
             document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
         }
 
         async function handleUpload(event) {
             const file = event.target.files[0];
-            if (!file) {
-                alert('No file selected');
-                return;
-            }
-            
-            console.log('Uploading:', file.name, file.type, file.size);
-            
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File too large. Max size: 10MB');
-                return;
-            }
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) { alert('File too large (Max 10MB)'); return; }
             
             const ext = file.name.split('.').pop().toLowerCase();
             alert(`Processing ${file.name}...`);
             
             try {
                 let content = '';
-                let bookType = ext.toUpperCase();
-                
                 if (ext === 'txt' || ext === 'html') {
                     content = await readFileAsText(file);
-                    if (ext === 'txt') {
-                        content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                    }
+                    if (ext === 'txt') content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
                 } else if (ext === 'pdf') {
                     content = await extractPDFText(file);
                 } else if (ext === 'epub') {
                     content = await extractEPUBText(file);
-                } else {
-                    alert('Unsupported file type');
-                    return;
-                }
+                } else { alert('Unsupported file type'); return; }
                 
-                if (!content || content.trim().length < 50) {
-                    alert('Could not extract text from file');
-                    return;
-                }
+                if (!content || content.trim().length < 50) { alert('Could not extract text'); return; }
                 
-                const book = {
-                    id: 'book_' + Date.now(),
-                    title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
-                    author: 'Uploaded',
-                    type: bookType,
-                    content: content
-                };
-                
-                books.push(book);
+                books.push({ id: 'book_' + Date.now(), title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '), author: 'Uploaded', type: ext.toUpperCase(), content: content });
                 localStorage.setItem('myBooks', JSON.stringify(books));
                 renderMyBooks();
-                alert('✅ Book uploaded successfully!');
+                alert('✅ Book uploaded!');
                 event.target.value = '';
-            } catch (err) {
-                console.error(err);
-                alert('Error: ' + err.message);
-            }
+            } catch (err) { alert('Error: ' + err.message); }
         }
 
-        function readFileAsText(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('Failed to read file'));
-                reader.readAsText(file);
-            });
-        }
+        function readFileAsText(file) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = (e) => resolve(e.target.result); r.onerror = () => reject(new Error('Read failed')); r.readAsText(file); }); }
 
         async function extractPDFText(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
             let fullText = '';
-            
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                const pageText = textContent.items.map(item => item.str).join(' ');
-                fullText += `<h2>Page ${i}</h2><p>${pageText}</p>`;
+                fullText += `<h2>Page ${i}</h2><p>${textContent.items.map(item => item.str).join(' ')}</p>`;
             }
-            
             return fullText;
         }
 
         async function extractEPUBText(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const zip = await JSZip.loadAsync(arrayBuffer);
+            const zip = await JSZip.loadAsync(await file.arrayBuffer());
             let content = '';
-            
-            zip.forEach((path, zipEntry) => {
-                if (path.match(/\.(xhtml|html)$/i) && !path.includes('META')) {
-                    content += zipEntry.async('text');
-                }
-            });
-            
-            content = content.replace(/<script[\s\S]*?<\/script>/gi, '')
-                            .replace(/<style[\s\S]*?<\/style>/gi, '')
-                            .replace(/<[^>]+>/g, ' ')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-            
-            const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
-            return paragraphs.map(p => `<p>${p.trim()}</p>`).join('') || '<p>Content extracted</p>';
+            zip.forEach((path, zipEntry) => { if (path.match(/\.(xhtml|html)$/i) && !path.includes('META')) content += await zipEntry.async('text'); });
+            content = content.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            return content.split(/\n\s*\n/).filter(p => p.trim().length > 50).map(p => `<p>${p.trim()}</p>`).join('') || '<p>Content extracted</p>';
         }
 
         async function searchBooks() {
             const query = document.getElementById('search-box').value.trim();
-            if (!query) {
-                alert('Please enter a search term');
-                return;
-            }
-            
+            if (!query) { alert('Enter a search term'); return; }
             const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = '<div class="alert">Searching...</div>';
-            
+            resultsDiv.innerHTML = '<p>Searching...</p>';
             try {
-                const response = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (!data.results || data.results.length === 0) {
-                    resultsDiv.innerHTML = '<div class="alert">No books found. Try a different search.</div>';
-                    return;
-                }
-                
+                const data = await (await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}`)).json();
                 resultsDiv.innerHTML = '';
                 let count = 0;
-                
                 data.results.forEach(book => {
                     const txtUrl = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
                     if (txtUrl && count < 10) {
                         count++;
                         const author = book.authors[0]?.name || 'Unknown';
-                        resultsDiv.innerHTML += `
-                            <div class="book-card">
-                                <div class="book-info">
-                                    <div class="book-title">${book.title}</div>
-                                    <div class="book-author">${author}</div>
-                                    <div class="book-type">TXT</div>
-                                </div>
-                                <button class="btn btn-success" onclick="downloadBook('${txtUrl}', '${book.title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button>
-                            </div>
-                        `;
+                        resultsDiv.innerHTML += `<div class="book-card"><div class="book-info"><div class="book-title">${book.title}</div><div class="book-author">${author}</div></div><button class="btn btn-success" onclick="downloadBook('${txtUrl}', '${book.title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button></div>`;
                     }
                 });
-                
-                if (count === 0) {
-                    resultsDiv.innerHTML = '<div class="alert">No text books found</div>';
-                }
-            } catch (err) {
-                resultsDiv.innerHTML = '<div class="alert">Error: Check internet connection</div>';
-            }
+                if (count === 0) resultsDiv.innerHTML = '<p>No books found</p>';
+            } catch (err) { resultsDiv.innerHTML = '<p>Error searching</p>'; }
         }
 
         async function downloadBook(url, title, author) {
-            alert('Downloading: ' + title);
-            
+            alert('Downloading...');
             try {
-                const response = await fetch(url);
-                const text = await response.text();
-                const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                
-                const book = {
-                    id: 'book_' + Date.now(),
-                    title: title,
-                    author: author,
-                    type: 'TXT',
-                    content: paragraphs
-                };
-                
-                books.push(book);
+                const text = await (await fetch(url)).text();
+                books.push({ id: 'book_' + Date.now(), title, author, type: 'TXT', content: text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('') });
                 localStorage.setItem('myBooks', JSON.stringify(books));
-                alert('✅ Downloaded! Check your Library.');
+                alert('✅ Downloaded!');
                 showSection('library');
-                document.querySelectorAll('.nav button')[0].classList.add('active');
-            } catch (err) {
-                alert('Download failed: ' + err.message);
-            }
+            } catch (err) { alert('Download failed'); }
         }
 
         function openBook(id, isPreloaded) {
-            let book;
-            if (isPreloaded) {
-                book = preloadedBooks.find(b => b.id === id);
-            } else {
-                book = books.find(b => b.id === id);
-            }
-            
-            if (!book) {
-                alert('Book not found');
-                return;
-            }
-            
+            const book = isPreloaded ? preloadedBooks.find(b => b.id === id) : books.find(b => b.id === id);
+            if (!book) return;
             currentBook = book;
             document.getElementById('reader-title').innerText = book.title;
             document.getElementById('reader-content').innerHTML = book.content;
@@ -424,18 +245,10 @@
             stopRead();
         }
 
-        function closeReader() {
-            document.getElementById('reader').style.display = 'none';
-            currentBook = null;
-            stopRead();
-        }
+        function closeReader() { document.getElementById('reader').style.display = 'none'; currentBook = null; stopRead(); }
 
         function deleteBook() {
-            if (!currentBook || !currentBook.id.startsWith('book_')) {
-                alert('Cannot delete preloaded books');
-                return;
-            }
-            
+            if (!currentBook || !currentBook.id.startsWith('book_')) { alert('Cannot delete preloaded books'); return; }
             if (confirm('Delete this book?')) {
                 books = books.filter(b => b.id !== currentBook.id);
                 localStorage.setItem('myBooks', JSON.stringify(books));
@@ -446,17 +259,15 @@
 
         function deleteMyBook(index, event) {
             event.stopPropagation();
-            const book = books[index];
-            if (confirm('Delete "' + book.title + '"?')) {
+            if (confirm('Delete?')) {
                 books.splice(index, 1);
                 localStorage.setItem('myBooks', JSON.stringify(books));
                 renderMyBooks();
             }
         }
 
+        // --- FIXED TTS LOGIC (CHUNKING) ---
         function toggleRead() {
-            const text = document.getElementById('reader-content').innerText;
-            
             if (isSpeaking && !isPaused) {
                 synth.pause();
                 isPaused = true;
@@ -468,70 +279,70 @@
                 isPaused = false;
                 document.getElementById('pause-btn').innerText = '⏸️ Pause';
             } else {
-                if (!text || text.trim().length === 0) {
-                    alert('No text to read');
-                    return;
-                }
+                const text = document.getElementById('reader-content').innerText;
+                // Clean text for TTS
+                const cleanText = text.replace(/\s+/g, ' ').trim();
                 
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.9;
-                utterance.pitch = 1;
-                utterance.onend = function() {
-                    isSpeaking = false;
-                    isPaused = false;
-                    document.getElementById('read-btn').style.display = 'inline-block';
-                    document.getElementById('pause-btn').style.display = 'none';
-                };
-                utterance.onerror = function(e) {
-                    console.error('TTS error:', e);
-                    alert('Text-to-speech error');
-                };
-                synth.speak(utterance);
+                if (!cleanText) { alert('No text to read'); return; }
+
+                // Split into chunks of 200 characters to prevent mobile crashes
+                speechQueue = [];
+                const chunkSize = 200;
+                for (let i = 0; i < cleanText.length; i += chunkSize) {
+                    speechQueue.push(cleanText.substring(i, i + chunkSize));
+                }
+
+                currentSpeechIndex = 0;
                 isSpeaking = true;
+                isPaused = false;
                 document.getElementById('read-btn').style.display = 'none';
                 document.getElementById('pause-btn').style.display = 'inline-block';
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+                
+                speakNextChunk();
+            }
+        }
+
+        function speakNextChunk() {
+            if (currentSpeechIndex < speechQueue.length && isSpeaking && !isPaused) {
+                const utterance = new SpeechSynthesisUtterance(speechQueue[currentSpeechIndex]);
+                utterance.rate = 0.9;
+                utterance.onend = () => {
+                    currentSpeechIndex++;
+                    speakNextChunk();
+                };
+                utterance.onerror = (e) => {
+                    console.error('TTS chunk error, skipping...', e);
+                    currentSpeechIndex++;
+                    speakNextChunk(); // Skip bad chunk
+                };
+                synth.speak(utterance);
+            } else if (currentSpeechIndex >= speechQueue.length) {
+                stopRead(); // Finished
             }
         }
 
         function pauseRead() {
-            if (isPaused) {
-                synth.resume();
-                isPaused = false;
-                document.getElementById('pause-btn').innerText = '⏸️ Pause';
-            } else {
-                synth.pause();
-                isPaused = true;
-                document.getElementById('pause-btn').innerText = '▶️ Resume';
-            }
+            if (isPaused) { synth.resume(); isPaused = false; document.getElementById('pause-btn').innerText = '⏸️ Pause'; } 
+            else { synth.pause(); isPaused = true; document.getElementById('pause-btn').innerText = '▶️ Resume'; }
         }
 
         function stopRead() {
             synth.cancel();
             isSpeaking = false;
             isPaused = false;
+            speechQueue = [];
+            currentSpeechIndex = 0;
             document.getElementById('read-btn').style.display = 'inline-block';
             document.getElementById('pause-btn').style.display = 'none';
         }
 
-        function changeSize(val) {
-            document.body.style.fontSize = val + 'px';
-            document.getElementById('size-val').innerText = val;
-        }
-
+        function changeSize(val) { document.body.style.fontSize = val + 'px'; document.getElementById('size-val').innerText = val; }
         function setTheme(theme) {
-            if (theme === 'sepia') {
-                document.body.style.background = '#f4ecd8';
-                document.body.style.color = '#5b4636';
-            } else if (theme === 'dark') {
-                document.body.style.background = '#121212';
-                document.body.style.color = '#e0e0e0';
-            } else if (theme === 'high-contrast') {
-                document.body.style.background = '#000000';
-                document.body.style.color = '#ffff00';
-            } else {
-                document.body.style.background = '#ffffff';
-                document.body.style.color = '#000000';
-            }
+            if (theme === 'sepia') { document.body.style.background = '#f4ecd8'; document.body.style.color = '#5b4636'; } 
+            else if (theme === 'dark') { document.body.style.background = '#121212'; document.body.style.color = '#e0e0e0'; } 
+            else if (theme === 'high-contrast') { document.body.style.background = '#000'; document.body.style.color = '#ff0'; } 
+            else { document.body.style.background = '#fff'; document.body.style.color = '#000'; }
         }
 
         init();
