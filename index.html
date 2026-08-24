@@ -3,57 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Read Ease - Final</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <title>Read Ease</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; touch-action: manipulation; }
-        
-        h1 { color: #2563eb; margin-bottom: 20px; font-size: 1.8em; }
-        h2 { color: #2563eb; margin: 20px 0 10px 0; font-size: 1.3em; }
-        
-        .btn { background: #2563eb; color: white; border: none; padding: 18px 20px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 5px 0; width: 100%; touch-action: manipulation; }
-        .btn:active { transform: scale(0.98); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; }
+        h1, h2 { color: #2563eb; margin: 20px 0 10px 0; }
+        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; }
+        .btn:active { opacity: 0.9; }
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
         .btn-success { background: #10b981; }
-        
         .book-card { background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
-        .book-info { flex-grow: 1; cursor: pointer; padding: 10px; }
-        .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
+        .book-info { flex-grow: 1; cursor: pointer; }
+        .book-title { font-weight: bold; font-size: 1.1em; }
         .book-author { font-size: 0.9em; color: #666; }
-        .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; }
-        
-        input[type="text"] { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 18px; margin: 10px 0; }
-        
+        .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; margin-top: 5px; }
+        input[type="text"] { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; }
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
-        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 20px; line-height: 1.8; }
-        #reader-controls { display: flex; gap: 10px; padding: 15px 0; border-top: 2px solid #2563eb; flex-wrap: wrap; }
-        #reader-controls .btn { flex: 1; min-width: 100px; }
-        
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #f3f4f6; display: flex; justify-content: space-around; padding: 15px 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav button { background: none; border: none; font-size: 14px; cursor: pointer; padding: 10px; flex: 1; }
+        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; }
+        #reader-controls { display: flex; gap: 10px; padding: 15px 0; border-top: 2px solid #2563eb; }
+        #reader-controls .btn { flex: 1; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #f3f4f6; display: flex; justify-content: space-around; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav button { background: none; border: none; font-size: 14px; cursor: pointer; }
         .nav button.active { color: #2563eb; font-weight: bold; border-bottom: 3px solid #2563eb; }
-        
         #file-input { display: none; }
-        .upload-area { background: #e0e7ff; border: 3px dashed #2563eb; border-radius: 12px; padding: 30px 20px; text-align: center; margin: 15px 0; cursor: pointer; }
-        .upload-icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-area { background: #e0e7ff; border: 3px dashed #2563eb; border-radius: 12px; padding: 30px; text-align: center; margin: 15px 0; cursor: pointer; }
         .section { display: none; }
         .section.active { display: block; }
+        .alert { background: #fee; color: #c00; padding: 15px; border-radius: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
     <div id="library-section" class="section active">
-        <h1>📚 Read Ease</h1>
+        <h1> Read Ease</h1>
         <div class="upload-area" onclick="document.getElementById('file-input').click()">
-            <div class="upload-icon">📤</div>
-            <div style="font-size: 18px; font-weight: bold;">Tap to Upload Book</div>
-            <div style="color: #666; margin-top: 5px;">Supports: PDF, EPUB, TXT, HTML</div>
+            <div style="font-size: 48px;">📤</div>
+            <div style="font-size: 18px; font-weight: bold;">Tap to Upload</div>
+            <div style="color: #666;">TXT, HTML files</div>
         </div>
-        <input type="file" id="file-input" accept=".txt,.pdf,.epub,.html,text/*,application/pdf,application/epub+zip" onchange="handleUpload(event)">
+        <input type="file" id="file-input" accept=".txt,.html,text/plain,text/html" onchange="handleUpload(event)">
         
         <h2>Preloaded Books</h2>
         <div id="preloaded-list"></div>
@@ -68,38 +58,37 @@
     </div>
 
     <div id="download-section" class="section">
-        <h1>🔍 Download Free Books</h1>
+        <h1>🔍 Download Books</h1>
         <input type="text" id="search-box" placeholder="Search (e.g., Sherlock)..." autocomplete="off">
         <button class="btn" onclick="searchBooks()">Search Project Gutenberg</button>
         <div id="search-results"></div>
         <div class="nav">
             <button onclick="showSection('library')">📚 Library</button>
             <button class="active" onclick="showSection('download')">🔍 Download</button>
-            <button onclick="showSection('settings')">️ Settings</button>
+            <button onclick="showSection('settings')">⚙️ Settings</button>
         </div>
     </div>
 
     <div id="settings-section" class="section">
-        <h1>️ Settings</h1>
+        <h1>⚙️ Settings</h1>
         <h2>Font Size: <span id="size-val">18</span>px</h2>
-        <input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%; height: 40px;">
+        <input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%;">
         <h2 style="margin-top: 30px;">Theme</h2>
         <button class="btn btn-secondary" onclick="setTheme('')">Normal</button>
         <button class="btn btn-secondary" onclick="setTheme('sepia')">Sepia</button>
-        <button class="btn btn-secondary" onclick="setTheme('dark')">Dark Mode</button>
-        <button class="btn btn-secondary" onclick="setTheme('high-contrast')">High Contrast</button>
+        <button class="btn btn-secondary" onclick="setTheme('dark')">Dark</button>
         <div class="nav">
             <button onclick="showSection('library')">📚 Library</button>
             <button onclick="showSection('download')">🔍 Download</button>
-            <button class="active" onclick="showSection('settings')">️ Settings</button>
+            <button class="active" onclick="showSection('settings')">⚙️ Settings</button>
         </div>
     </div>
 
     <div id="reader">
         <div id="reader-header">
-            <button class="btn btn-secondary" onclick="closeReader()" style="padding: 10px 15px; width:auto;">← Back</button>
+            <button class="btn btn-secondary" onclick="closeReader()" style="width:auto; padding: 10px 15px;">← Back</button>
             <h2 id="reader-title" style="margin:0; flex-grow:1; text-align:center; font-size: 16px;"></h2>
-            <button class="btn btn-danger" onclick="deleteBook()" style="padding: 10px 15px; width:auto;">🗑️</button>
+            <button class="btn btn-danger" onclick="deleteBook()" style="width:auto; padding: 10px 15px;">️</button>
         </div>
         <div id="reader-content"></div>
         <div id="reader-controls">
@@ -110,21 +99,17 @@
     </div>
 
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        
         let books = JSON.parse(localStorage.getItem('myBooks') || '[]');
         let currentBook = null;
         let isSpeaking = false;
         let isPaused = false;
-        const synth = window.speechSynthesis;
-        
-        // TTS Chunking variables
         let speechQueue = [];
         let currentSpeechIndex = 0;
+        const synth = window.speechSynthesis;
 
         const preloadedBooks = [
-            { id: 'pre1', title: 'Alice in Wonderland', author: 'Lewis Carroll', type: 'TXT', content: '<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it.</p><p>So she was considering in her own mind, as well as she could, for the hot day made her feel very sleepy and stupid, whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.</p>' },
-            { id: 'pre2', title: "Aesop's Fables", author: 'Aesop', type: 'TXT', content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow. Do you ever get anywhere? he asked with a mocking laugh.</p><p>Yes, replied the Tortoise, and I get there sooner than you think. I will run you a race and prove it.</p>' }
+            { id: 'pre1', title: 'Alice in Wonderland', author: 'Lewis Carroll', type: 'TXT', content: '<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do.</p><p>Suddenly a White Rabbit with pink eyes ran close by her.</p>' },
+            { id: 'pre2', title: "Aesop's Fables", author: 'Aesop', type: 'TXT', content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise for being so slow.</p><p>"I will run you a race and prove it," said the Tortoise.</p>' }
         ];
 
         function init() { renderPreloaded(); renderMyBooks(); }
@@ -133,16 +118,16 @@
             const container = document.getElementById('preloaded-list');
             container.innerHTML = '';
             preloadedBooks.forEach(book => {
-                container.innerHTML += `<div class="book-card" onclick="openBook('${book.id}', true)"><div class="book-info"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><div style="font-size: 24px;">📖</div></div>`;
+                container.innerHTML += `<div class="book-card" onclick="openBook('${book.id}', true)"><div class="book-info"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><div>📖</div></div>`;
             });
         }
 
         function renderMyBooks() {
             const container = document.getElementById('my-books-list');
-            if (books.length === 0) { container.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet.</p>'; return; }
+            if (books.length === 0) { container.innerHTML = '<p style="color:#666; padding:20px;">No books yet. Upload or download!</p>'; return; }
             container.innerHTML = '';
             books.forEach((book, index) => {
-                container.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook('${book.id}', false)"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><button class="btn btn-danger" onclick="deleteMyBook(${index}, event)" style="padding: 10px; margin: 5px; width:auto;">🗑️</button></div>`;
+                container.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook('${book.id}', false)"><div class="book-title">${book.title}</div><div class="book-author">${book.author}</div><div class="book-type">${book.type}</div></div><button class="btn btn-danger" onclick="deleteMyBook(${index}, event)" style="width:auto; padding: 10px;">🗑️</button></div>`;
             });
         }
 
@@ -153,54 +138,40 @@
             event.target.classList.add('active');
         }
 
-        async function handleUpload(event) {
+        function handleUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 10 * 1024 * 1024) { alert('File too large (Max 10MB)'); return; }
             
-            const ext = file.name.split('.').pop().toLowerCase();
-            alert(`Processing ${file.name}...`);
+            console.log('File selected:', file.name, file.type);
             
-            try {
-                let content = '';
-                if (ext === 'txt' || ext === 'html') {
-                    content = await readFileAsText(file);
-                    if (ext === 'txt') content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-                } else if (ext === 'pdf') {
-                    content = await extractPDFText(file);
-                } else if (ext === 'epub') {
-                    content = await extractEPUBText(file);
-                } else { alert('Unsupported file type'); return; }
-                
-                if (!content || content.trim().length < 50) { alert('Could not extract text'); return; }
-                
-                books.push({ id: 'book_' + Date.now(), title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '), author: 'Uploaded', type: ext.toUpperCase(), content: content });
-                localStorage.setItem('myBooks', JSON.stringify(books));
-                renderMyBooks();
-                alert('✅ Book uploaded!');
-                event.target.value = '';
-            } catch (err) { alert('Error: ' + err.message); }
-        }
-
-        function readFileAsText(file) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = (e) => resolve(e.target.result); r.onerror = () => reject(new Error('Read failed')); r.readAsText(file); }); }
-
-        async function extractPDFText(file) {
-            const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
-            let fullText = '';
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += `<h2>Page ${i}</h2><p>${textContent.items.map(item => item.str).join(' ')}</p>`;
-            }
-            return fullText;
-        }
-
-        async function extractEPUBText(file) {
-            const zip = await JSZip.loadAsync(await file.arrayBuffer());
-            let content = '';
-            zip.forEach((path, zipEntry) => { if (path.match(/\.(xhtml|html)$/i) && !path.includes('META')) content += await zipEntry.async('text'); });
-            content = content.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            return content.split(/\n\s*\n/).filter(p => p.trim().length > 50).map(p => `<p>${p.trim()}</p>`).join('') || '<p>Content extracted</p>';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const paragraphs = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                    
+                    const book = {
+                        id: 'book_' + Date.now(),
+                        title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
+                        author: 'Uploaded',
+                        type: file.name.split('.').pop().toUpperCase(),
+                        content: paragraphs
+                    };
+                    
+                    books.push(book);
+                    localStorage.setItem('myBooks', JSON.stringify(books));
+                    renderMyBooks();
+                    alert('✅ Book uploaded: ' + book.title);
+                    event.target.value = '';
+                } catch (err) {
+                    console.error(err);
+                    alert('Error uploading: ' + err.message);
+                }
+            };
+            reader.onerror = function() {
+                alert('Error reading file');
+            };
+            reader.readAsText(file);
         }
 
         async function searchBooks() {
@@ -208,9 +179,17 @@
             if (!query) { alert('Enter a search term'); return; }
             const resultsDiv = document.getElementById('search-results');
             resultsDiv.innerHTML = '<p>Searching...</p>';
+            
             try {
-                const data = await (await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}`)).json();
+                const response = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}`);
+                const data = await response.json();
                 resultsDiv.innerHTML = '';
+                
+                if (!data.results || data.results.length === 0) {
+                    resultsDiv.innerHTML = '<p>No books found</p>';
+                    return;
+                }
+                
                 let count = 0;
                 data.results.forEach(book => {
                     const txtUrl = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
@@ -220,24 +199,37 @@
                         resultsDiv.innerHTML += `<div class="book-card"><div class="book-info"><div class="book-title">${book.title}</div><div class="book-author">${author}</div></div><button class="btn btn-success" onclick="downloadBook('${txtUrl}', '${book.title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button></div>`;
                     }
                 });
-                if (count === 0) resultsDiv.innerHTML = '<p>No books found</p>';
-            } catch (err) { resultsDiv.innerHTML = '<p>Error searching</p>'; }
+                if (count === 0) resultsDiv.innerHTML = '<p>No text books found</p>';
+            } catch (err) {
+                resultsDiv.innerHTML = '<p class="alert">Error: Check internet</p>';
+            }
         }
 
         async function downloadBook(url, title, author) {
-            alert('Downloading...');
+            alert('Downloading: ' + title);
             try {
-                const text = await (await fetch(url)).text();
-                books.push({ id: 'book_' + Date.now(), title, author, type: 'TXT', content: text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('') });
+                const response = await fetch(url);
+                const text = await response.text();
+                const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                
+                books.push({
+                    id: 'book_' + Date.now(),
+                    title: title,
+                    author: author,
+                    type: 'TXT',
+                    content: paragraphs
+                });
                 localStorage.setItem('myBooks', JSON.stringify(books));
                 alert('✅ Downloaded!');
                 showSection('library');
-            } catch (err) { alert('Download failed'); }
+            } catch (err) {
+                alert('Download failed');
+            }
         }
 
         function openBook(id, isPreloaded) {
             const book = isPreloaded ? preloadedBooks.find(b => b.id === id) : books.find(b => b.id === id);
-            if (!book) return;
+            if (!book) { alert('Book not found'); return; }
             currentBook = book;
             document.getElementById('reader-title').innerText = book.title;
             document.getElementById('reader-content').innerHTML = book.content;
@@ -245,7 +237,11 @@
             stopRead();
         }
 
-        function closeReader() { document.getElementById('reader').style.display = 'none'; currentBook = null; stopRead(); }
+        function closeReader() {
+            document.getElementById('reader').style.display = 'none';
+            currentBook = null;
+            stopRead();
+        }
 
         function deleteBook() {
             if (!currentBook || !currentBook.id.startsWith('book_')) { alert('Cannot delete preloaded books'); return; }
@@ -266,7 +262,6 @@
             }
         }
 
-        // --- FIXED TTS LOGIC (CHUNKING) ---
         function toggleRead() {
             if (isSpeaking && !isPaused) {
                 synth.pause();
@@ -280,12 +275,9 @@
                 document.getElementById('pause-btn').innerText = '⏸️ Pause';
             } else {
                 const text = document.getElementById('reader-content').innerText;
-                // Clean text for TTS
                 const cleanText = text.replace(/\s+/g, ' ').trim();
-                
                 if (!cleanText) { alert('No text to read'); return; }
 
-                // Split into chunks of 200 characters to prevent mobile crashes
                 speechQueue = [];
                 const chunkSize = 200;
                 for (let i = 0; i < cleanText.length; i += chunkSize) {
@@ -311,20 +303,26 @@
                     currentSpeechIndex++;
                     speakNextChunk();
                 };
-                utterance.onerror = (e) => {
-                    console.error('TTS chunk error, skipping...', e);
+                utterance.onerror = () => {
                     currentSpeechIndex++;
-                    speakNextChunk(); // Skip bad chunk
+                    speakNextChunk();
                 };
                 synth.speak(utterance);
             } else if (currentSpeechIndex >= speechQueue.length) {
-                stopRead(); // Finished
+                stopRead();
             }
         }
 
         function pauseRead() {
-            if (isPaused) { synth.resume(); isPaused = false; document.getElementById('pause-btn').innerText = '⏸️ Pause'; } 
-            else { synth.pause(); isPaused = true; document.getElementById('pause-btn').innerText = '▶️ Resume'; }
+            if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+            } else {
+                synth.pause();
+                isPaused = true;
+                document.getElementById('pause-btn').innerText = '▶️ Resume';
+            }
         }
 
         function stopRead() {
@@ -337,11 +335,14 @@
             document.getElementById('pause-btn').style.display = 'none';
         }
 
-        function changeSize(val) { document.body.style.fontSize = val + 'px'; document.getElementById('size-val').innerText = val; }
+        function changeSize(val) {
+            document.body.style.fontSize = val + 'px';
+            document.getElementById('size-val').innerText = val;
+        }
+
         function setTheme(theme) {
-            if (theme === 'sepia') { document.body.style.background = '#f4ecd8'; document.body.style.color = '#5b4636'; } 
-            else if (theme === 'dark') { document.body.style.background = '#121212'; document.body.style.color = '#e0e0e0'; } 
-            else if (theme === 'high-contrast') { document.body.style.background = '#000'; document.body.style.color = '#ff0'; } 
+            if (theme === 'sepia') { document.body.style.background = '#f4ecd8'; document.body.style.color = '#5b4636'; }
+            else if (theme === 'dark') { document.body.style.background = '#121212'; document.body.style.color = '#e0e0e0'; }
             else { document.body.style.background = '#fff'; document.body.style.color = '#000'; }
         }
 
