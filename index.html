@@ -2,263 +2,324 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Read Ease</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <!-- PDF and EPUB libraries (Cached for offline use) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --primary: #2563eb;
-            --btn-bg: #f3f4f6;
-            --font-size: 18px;
-            --font-family: Georgia, serif;
+            --bg: #ffffff; --text: #000000; --primary: #2563eb; --card: #f3f4f6;
+            --font-size: 18px; --font-family: Georgia, serif;
         }
-        body {
-            margin: 0; padding: 0;
-             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
-            font-size: var(--font-size);
-            line-height: 1.6;
-            transition: all 0.3s ease;
-        }
-        /* Accessibility Themes */
-        body.sepia { --bg-color: #f4ecd8; --text-color: #5b4636; }
-        body.dark { --bg-color: #121212; --text-color: #e0e0e0; --btn-bg: #333; }
-        body.high-contrast { --bg-color: #000000; --text-color: #ffff00; --primary: #ffff00; --btn-bg: #333; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-family); font-size: var(--font-size); padding-bottom: 70px; }
+        body.sepia { --bg: #f4ecd8; --text: #5b4636; --card: #eaddcf; }
+        body.dark { --bg: #121212; --text: #e0e0e0; --card: #2d2d2d; }
+        body.high-contrast { --bg: #000000; --text: #ffff00; --primary: #ffff00; --card: #333333; }
         
-        /* UI Layout */
-        .app-container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 1.5em; color: var(--primary); }
-        
-        /* Big Buttons for Elderly/Kids */
-        button {
-            background: var(--btn-bg); color: var(--text-color);
-            border: 2px solid var(--primary); border-radius: 12px;
-            padding: 15px 20px; font-size: 1.1em; font-weight: bold;
-            cursor: pointer; margin: 5px; touch-action: manipulation;
-        }
-        button:active { transform: scale(0.95); }
-        .btn-primary { background: var(--primary); color: white; }
-        
-        /* Library List */
-        .book-card {
-            background: var(--btn-bg); border-radius: 15px;
-            padding: 20px; margin-bottom: 15px; cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .book-card:active { border-color: var(--primary); }
-        .book-title { font-size: 1.3em; font-weight: bold; margin-bottom: 5px; }
-        .book-author { font-size: 0.9em; opacity: 0.8; }
+        /* Navigation */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-btn { background: none; border: none; color: var(--text); font-size: 14px; display: flex; flex-direction: column; align-items: center; padding: 5px; }
+        .nav-btn.active { color: var(--primary); font-weight: bold; }
+        .nav-btn span { font-size: 24px; margin-bottom: 2px; }
 
-        /* Reader View */
-        #reader-view { display: none; }
-        #book-content { padding: 10px 0; margin-bottom: 80px; }
-        .tts-controls {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--btn-bg); padding: 15px;
-            display: flex; justify-content: center; gap: 10px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        }
+        /* Views */
+        .view { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .view.active { display: block; }
+        h2 { margin-top: 0; color: var(--primary); }
+
+        /* Book Cards */
+        .book-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 2px solid transparent; }
+        .book-info { flex-grow: 1; cursor: pointer; }
+        .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
+        .book-author { font-size: 0.9em; opacity: 0.8; }
+        .btn-delete { background: #ef4444; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 16px; margin-left: 10px; }
+
+        /* Buttons & Inputs */
+        button { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button.secondary { background: var(--card); color: var(--text); border: 2px solid var(--primary); }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--primary); background: var(--bg); color: var(--text); font-size: 16px; box-sizing: border-box; margin-bottom: 15px; }
         
+        /* Reader */
+        #reader-view { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 200; display: none; flex-direction: column; }
+        .reader-header { padding: 15px; background: var(--card); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); }
+        .reader-content { flex-grow: 1; overflow-y: auto; padding: 20px; line-height: 1.8; }
+        .reader-controls { padding: 15px; background: var(--card); display: flex; justify-content: center; gap: 15px; border-top: 2px solid var(--primary); }
+        .reader-controls button { padding: 15px 25px; font-size: 18px; }
+
         /* Settings Modal */
-        #settings-modal {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); z-index: 100;
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: var(--bg-color); color: var(--text-color);
-            padding: 25px; border-radius: 15px; width: 90%; max-width: 400px;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 300; justify-content: center; align-items: center; }
+        .modal-content { background: var(--bg); color: var(--text); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
         .setting-row { margin-bottom: 20px; }
-        .setting-row label { display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1em; }
-        input[type="range"] { width: 100%; height: 20px; }
-        .theme-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-        
-        /* File Upload */
-        #file-input { display: none; }
+        .setting-row label { display: block; margin-bottom: 10px; font-weight: bold; }
+        input[type="range"] { width: 100%; }
+        .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <!-- HOME SCREEN -->
-    <div id="home-view">
-        <div class="header">
-            <h1> Read Ease</h1>
-            <button onclick="document.getElementById('file-input').click()">⬆️ Upload</button>
-            <input type="file" id="file-input" accept=".txt,.html" onchange="handleUpload(event)">
-        </div>
-        
-        <h2 style="margin-top:0;">My Library</h2>
-        <div id="library-list">
-            <!-- Preloaded books will appear here -->
-        </div>
+    <!-- LIBRARY VIEW -->
+    <div id="library-view" class="view active">
+        <h2>My Library</h2>
+        <button onclick="document.getElementById('file-input').click()" style="width:100%; margin-bottom:20px;">⬆️ Upload Book (PDF, TXT, HTML)</button>
+        <input type="file" id="file-input" accept=".txt,.html,.pdf,.epub" style="display:none" onchange="handleUpload(event)">
+        <div id="library-list"></div>
     </div>
 
-    <!-- READER SCREEN -->
-    <div id="reader-view">
-        <div class="header">
-            <button onclick="goHome()">️ Back</button>
-            <h1 id="reader-title" style="font-size: 1.2em;">Book Title</h1>
-            <button onclick="openSettings()">️</button>
-        </div>
-        <div id="book-content"></div>
-        
-        <div class="tts-controls">
-            <button class="btn-primary" id="play-btn" onclick="toggleTTS()">▶️ Read Aloud</button>
-            <button onclick="stopTTS()">⏹️ Stop</button>
-        </div>
+    <!-- DISCOVER VIEW (Download from Web) -->
+    <div id="discover-view" class="view">
+        <h2>Discover Free Books</h2>
+        <input type="text" id="search-input" placeholder="Search Project Gutenberg..." onkeypress="if(event.key==='Enter') searchBooks()">
+        <button onclick="searchBooks()" style="width:100%; margin-bottom:20px;">Search</button>
+        <div id="discover-list"></div>
     </div>
-</div>
 
-<!-- SETTINGS MODAL -->
-<div id="settings-modal" onclick="if(event.target===this) closeSettings()">
-    <div class="modal-content">
+    <!-- SETTINGS VIEW -->
+    <div id="settings-view" class="view">
         <h2>Accessibility Settings</h2>
-        
         <div class="setting-row">
             <label>🔍 Zoom (Font Size): <span id="font-val">18</span>px</label>
             <input type="range" min="14" max="40" value="18" oninput="changeFontSize(this.value)">
         </div>
-
         <div class="setting-row">
-            <label> Eye Care Theme</label>
-            <div class="theme-btns">
-                <button onclick="setTheme('')">Normal</button>
-                <button onclick="setTheme('sepia')">Sepia</button>
-                <button onclick="setTheme('dark')">Dark</button>
-                <button onclick="setTheme('high-contrast')">High Contrast</button>
+            <label>Eye Care Theme</label>
+            <div class="theme-grid">
+                <button class="secondary" onclick="setTheme('')">Normal</button>
+                <button class="secondary" onclick="setTheme('sepia')">Sepia</button>
+                <button class="secondary" onclick="setTheme('dark')">Dark</button>
+                <button class="secondary" onclick="setTheme('high-contrast')">High Contrast</button>
             </div>
         </div>
-
         <div class="setting-row">
-            <label> Font Style</label>
-            <div class="theme-btns">
-                <button onclick="setFont('Georgia, serif')">Standard</button>
-                <button onclick="setFont('Arial, sans-serif')">Sans-Serif</button>
-                <button onclick="setFont('Comic Sans MS, cursive')">Kids/Dyslexia</button>
+            <label>Font Style</label>
+            <div class="theme-grid">
+                <button class="secondary" onclick="setFont('Georgia, serif')">Standard</button>
+                <button class="secondary" onclick="setFont('Arial, sans-serif')">Clear Sans</button>
+                <button class="secondary" onclick="setFont('Comic Sans MS, cursive')">Kids/Dyslexia</button>
             </div>
         </div>
-
-        <button class="btn-primary" style="width:100%" onclick="closeSettings()">Close</button>
     </div>
-</div>
 
-<script>
-    // --- PRELOADED LIBRARY ---
-    const preloadedBooks = [
-        {
-            title: "Alice's Adventures in Wonderland",
-            author: "Lewis Carroll",
-            content: "<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'</p>"
-        },
-        {
-            title: "Aesop's Fables",
-            author: "Aesop",
-            content: "<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow. 'Do you ever get anywhere?' he asked with a mocking laugh. 'Yes,' replied the Tortoise, 'and I get there sooner than you think. I'll run you a race and prove it.'</p>"
+    <!-- READER VIEW -->
+    <div id="reader-view">
+        <div class="reader-header">
+            <button class="secondary" onclick="closeReader()">← Back</button>
+            <h3 id="reader-title" style="margin:0; font-size:16px;">Title</h3>
+            <button class="secondary" onclick="openSettings()">⚙️</button>
+        </div>
+        <div id="reader-content" class="reader-content"></div>
+        <div class="reader-controls">
+            <button id="play-btn" onclick="toggleTTS()">▶️ Read</button>
+            <button class="secondary" onclick="stopTTS()">⏹️ Stop</button>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL (For Reader) -->
+    <div id="settings-modal" class="modal" onclick="if(event.target===this) closeSettings()">
+        <div class="modal-content">
+            <h2>Quick Settings</h2>
+            <div class="setting-row">
+                <label>Font Size: <span id="modal-font-val">18</span>px</label>
+                <input type="range" min="14" max="40" value="18" oninput="changeFontSize(this.value)">
+            </div>
+            <button onclick="closeSettings()" style="width:100%">Close</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="nav">
+        <button class="nav-btn active" onclick="switchView('library')"><span>📚</span>Library</button>
+        <button class="nav-btn" onclick="switchView('discover')"><span></span>Discover</button>
+        <button class="nav-btn" onclick="switchView('settings')"><span>⚙️</span>Settings</button>
+    </div>
+
+    <script>
+        // --- DATABASE (IndexedDB for Offline Storage) ---
+        let db;
+        const request = indexedDB.open("ReadEaseDB", 1);
+        request.onupgradeneeded = (e) => { db = e.target.result; db.createObjectStore("books", { keyPath: "id" }); };
+        request.onsuccess = (e) => { db = e.target.result; loadLibrary(); };
+
+        // --- PRELOADED BOOKS ---
+        const preloaded = [
+            { id: "pre1", title: "Alice in Wonderland", author: "Lewis Carroll", type: "html", content: "<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank...</p>" },
+            { id: "pre2", title: "Aesop's Fables", author: "Aesop", type: "html", content: "<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow...</p>" }
+        ];
+
+        let currentBook = null;
+        let isSpeaking = false;
+        const synth = window.speechSynthesis;
+
+        // --- NAVIGATION ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(viewName + '-view').classList.add('active');
+            event.currentTarget.classList.add('active');
         }
-    ];
 
-    let currentText = "";
-    let isSpeaking = false;
-    const synth = window.speechSynthesis;
+        // --- LIBRARY MANAGEMENT ---
+        function loadLibrary() {
+            const list = document.getElementById('library-list');
+            list.innerHTML = '';
+            
+            // Load Preloaded
+            preloaded.forEach(book => renderBookCard(book, false));
+            
+            // Load from DB
+            const transaction = db.transaction(["books"], "readonly");
+            const store = transaction.objectStore("books");
+            store.openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) { renderBookCard(cursor.value, true); cursor.continue(); }
+            };
+        }
 
-    // --- INITIALIZATION ---
-    function init() {
-        const list = document.getElementById('library-list');
-        preloadedBooks.forEach((book, index) => {
-            list.innerHTML += `
-                <div class="book-card" onclick="openBook(${index})">
+        function renderBookCard(book, isDeletable) {
+            const list = document.getElementById('library-list');
+            const div = document.createElement('div');
+            div.className = 'book-card';
+            div.innerHTML = `
+                <div class="book-info" onclick="openBook('${book.id}', ${isDeletable})">
                     <div class="book-title">${book.title}</div>
                     <div class="book-author">${book.author}</div>
                 </div>
+                ${isDeletable ? `<button class="btn-delete" onclick="deleteBook('${book.id}')">️</button>` : ''}
             `;
-        });
-    }
-
-    // --- NAVIGATION ---
-    function openBook(index) {
-        const book = preloadedBooks[index];
-        document.getElementById('reader-title').innerText = book.title;
-        document.getElementById('book-content').innerHTML = book.content;
-        currentText = book.content.replace(/<[^>]*>/g, ' '); // Strip HTML for TTS
-        
-        document.getElementById('home-view').style.display = 'none';
-        document.getElementById('reader-view').style.display = 'block';
-    }
-
-    function goHome() {
-        stopTTS();
-        document.getElementById('reader-view').style.display = 'none';
-        document.getElementById('home-view').style.display = 'block';
-    }
-
-    // --- NATURAL READER (TTS) ---
-    function toggleTTS() {
-        if (isSpeaking) {
-            synth.pause();
-            isSpeaking = false;
-            document.getElementById('play-btn').innerText = "▶️ Resume";
-        } else {
-            if (synth.paused) {
-                synth.resume();
-            } else {
-                const utterance = new SpeechSynthesisUtterance(currentText);
-                utterance.rate = 0.9; // Slightly slower for better comprehension
-                synth.speak(utterance);
-            }
-            isSpeaking = true;
-            document.getElementById('play-btn').innerText = "⏸️ Pause";
+            list.appendChild(div);
         }
-    }
 
-    function stopTTS() {
-        synth.cancel();
-        isSpeaking = false;
-        document.getElementById('play-btn').innerText = "▶️ Read Aloud";
-    }
+        function deleteBook(id) {
+            if(confirm('Delete this book?')) {
+                const transaction = db.transaction(["books"], "readwrite");
+                transaction.objectStore("books").delete(id);
+                transaction.oncomplete = loadLibrary;
+            }
+        }
 
-    // --- ACCESSIBILITY SETTINGS ---
-    function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-    function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+        // --- UPLOAD & DOWNLOAD ---
+        function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                saveToDB({ id: Date.now().toString(), title: file.name, author: "Uploaded", type: file.name.split('.').pop(), content: e.target.result });
+            };
+            if(file.name.endsWith('.pdf')) reader.readAsArrayBuffer(file);
+            else reader.readAsText(file);
+        }
 
-    function changeFontSize(val) {
-        document.documentElement.style.setProperty('--font-size', val + 'px');
-        document.getElementById('font-val').innerText = val;
-    }
+        async function searchBooks() {
+            const query = document.getElementById('search-input').value;
+            const list = document.getElementById('discover-list');
+            list.innerHTML = '<p>Searching...</p>';
+            
+            try {
+                const res = await fetch(`https://gutendex.com/books?search=${query}`);
+                const data = await res.json();
+                list.innerHTML = '';
+                data.results.forEach(book => {
+                    const txtUrl = book.formats['text/plain; charset=utf-8'];
+                    if(txtUrl) {
+                        const div = document.createElement('div');
+                        div.className = 'book-card';
+                        div.innerHTML = `
+                            <div class="book-info">
+                                <div class="book-title">${book.title}</div>
+                                <div class="book-author">${book.authors[0]?.name || 'Unknown'}</div>
+                            </div>
+                            <button onclick="downloadBook('${txtUrl}', '${book.title.replace(/'/g, "\\'")}', '${book.authors[0]?.name || 'Unknown'}')">⬇️</button>
+                        `;
+                        list.appendChild(div);
+                    }
+                });
+            } catch (err) { list.innerHTML = '<p>Error searching. Check internet.</p>'; }
+        }
 
-    function setTheme(theme) {
-        document.body.className = theme;
-    }
+        async function downloadBook(url, title, author) {
+            alert('Downloading...');
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                // Convert plain text to HTML paragraphs
+                const htmlContent = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                saveToDB({ id: Date.now().toString(), title, author, type: 'html', content: htmlContent });
+            } catch (err) { alert('Download failed'); }
+        }
 
-    function setFont(font) {
-        document.documentElement.style.setProperty('--font-family', font);
-    }
+        function saveToDB(book) {
+            const transaction = db.transaction(["books"], "readwrite");
+            transaction.objectStore("books").put(book);
+            transaction.oncomplete = () => { loadLibrary(); alert('Saved to Library!'); };
+        }
 
-    // --- UPLOAD FEATURE ---
-    function handleUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            preloadedBooks.push({
-                title: file.name.replace(/\.[^/.]+$/, ""),
-                author: "Uploaded",
-                content: `<p>${content.replace(/\n/g, '</p><p>')}</p>`
-            });
-            init(); // Refresh library
-            alert("Book added to library!");
-        };
-        reader.readAsText(file);
-    }
+        // --- READER & TTS ---
+        function openBook(id, isFromDB) {
+            let book;
+            if (!isFromDB) book = preloaded.find(b => b.id === id);
+            else {
+                const transaction = db.transaction(["books"], "readonly");
+                transaction.objectStore("books").get(id).onsuccess = (e) => { book = e.target.result; renderBook(book); };
+                return;
+            }
+            renderBook(book);
+        }
 
-    // Start the app
-    init();
-</script>
+        function renderBook(book) {
+            currentBook = book;
+            document.getElementById('reader-title').innerText = book.title;
+            const contentDiv = document.getElementById('reader-content');
+            
+            if (book.type === 'pdf') {
+                // Basic PDF rendering would go here, for now show message
+                contentDiv.innerHTML = '<p>PDF Viewer loading... (Use browser PDF viewer for best results)</p>';
+            } else {
+                contentDiv.innerHTML = book.content;
+            }
+            
+            document.getElementById('reader-view').style.display = 'flex';
+            // Restore scroll position
+            const savedPos = localStorage.getItem('scroll_' + book.id) || 0;
+            contentDiv.scrollTop = savedPos;
+        }
+
+        function closeReader() {
+            stopTTS();
+            if(currentBook) localStorage.setItem('scroll_' + currentBook.id, document.getElementById('reader-content').scrollTop);
+            document.getElementById('reader-view').style.display = 'none';
+        }
+
+        // Save scroll on scroll
+        document.getElementById('reader-content').addEventListener('scroll', (e) => {
+            if(currentBook) localStorage.setItem('scroll_' + currentBook.id, e.target.scrollTop);
+        });
+
+        function toggleTTS() {
+            const text = document.getElementById('reader-content').innerText;
+            if (isSpeaking) { synth.pause(); isSpeaking = false; document.getElementById('play-btn').innerText = "▶️ Resume"; } 
+            else {
+                if (synth.paused) { synth.resume(); } 
+                else {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.9; synth.speak(utterance);
+                }
+                isSpeaking = true; document.getElementById('play-btn').innerText = "⏸️ Pause";
+            }
+        }
+
+        function stopTTS() { synth.cancel(); isSpeaking = false; document.getElementById('play-btn').innerText = "▶️ Read"; }
+
+        // --- SETTINGS ---
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+        function changeFontSize(val) { document.documentElement.style.setProperty('--font-size', val + 'px'); document.getElementById('font-val').innerText = val; document.getElementById('modal-font-val').innerText = val; }
+        function setTheme(t) { document.body.className = t; }
+        function setFont(f) { document.documentElement.style.setProperty('--font-family', f); }
+
+        // --- SERVICE WORKER REGISTRATION (For Offline) ---
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    </script>
 </body>
 </html>
