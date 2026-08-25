@@ -1,45 +1,71 @@
-// Download book using fast CORS proxy
-async function downloadBook(url,title,author){
-  if(!url){
+// Download book with multiple proxy attempts
+async function downloadBook(url, title, author) {
+  if (!url) {
     alert('No text format available');
     return;
   }
   
-  alert('Downloading: '+title+'\nPlease wait...');
+  alert('Downloading: ' + title + '\nPlease wait...');
   
-  try{
-    // Use faster CORS proxy
-    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(url);
-    const response=await fetch(proxyUrl);
-    
-    if(!response.ok){
-      throw new Error('Download failed: '+response.status);
+  // Try multiple proxies in order
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://thingproxy.freeboard.io/fetch/'
+  ];
+  
+  let lastError = null;
+  
+  for (const proxy of proxies) {
+    try {
+      const proxyUrl = proxy + encodeURIComponent(url);
+      
+      // Add timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const response = await fetch(proxyUrl, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      
+      const text = await response.text();
+      
+      if (text.length < 50) {
+        throw new Error('Empty file');
+      }
+      
+      const content = text.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+      
+      const book = {
+        title: title,
+        author: author,
+        type: 'TXT',
+        content: content,
+        cover: '',
+        progress: 0,
+        folder: currentFolder || null,
+        timestamp: Date.now()
+      };
+      
+      await db.books.add(book);
+      await loadBooks();
+      alert('✅ Downloaded! Check Library.');
+      return; // Success! Exit function
+      
+    } catch (err) {
+      lastError = err;
+      console.log('Proxy failed:', proxy, err.message);
+      continue; // Try next proxy
     }
-    
-    const text=await response.text();
-    
-    if(text.length<50){
-      throw new Error('Empty file');
-    }
-    
-    const content=text.split('\n\n').map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
-    
-    const book={
-      title:title,
-      author:author,
-      type:'TXT',
-      content:content,
-      cover:'',
-      progress:0,
-      folder:currentFolder||null,
-      timestamp:Date.now()
-    };
-    
-    await db.books.add(book);
-    await loadBooks();
-    alert('✅ Downloaded! Check Library.');
-  }catch(err){
-    alert('Download failed: '+err.message+'\n\nTry searching for a different book.');
-    console.error('Download error:',err);
   }
+  
+  // All proxies failed
+  alert('Download failed: ' + lastError.message + '\n\nTry searching for a different book or check your internet connection.');
+  console.error('All proxies failed:', lastError);
 }
