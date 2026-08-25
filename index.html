@@ -9,7 +9,6 @@
     <title>Read Ease</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <!-- Dexie.js for IndexedDB (handles large files) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -40,7 +39,9 @@
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
         #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; }
         
-        /* Karaoke TTS Highlighting */
+        #reader-text-wrapper { position: relative; z-index: 1; }
+        #reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3 { margin: 10px 0; }
+        
         #reader-content .highlighted { background-color: #fef08a; color: #000; padding: 2px 4px; border-radius: 4px; }
         #reader-content .speaking { background-color: #fde047; color: #000; padding: 2px 4px; border-radius: 4px; font-weight: bold; }
         
@@ -76,10 +77,9 @@
         .source-selector { margin: 15px 0; }
         .source-selector label { display: block; margin-bottom: 5px; font-weight: bold; }
         
-        /* Tap zone indicators (hidden by default, shown for demo) */
         .tap-zone-left, .tap-zone-right { position: absolute; top: 0; bottom: 0; width: 20%; z-index: 10; }
-        .tap-zone-left { left: 0; /* background: rgba(25,63,235,0.1); */ }
-        .tap-zone-right { right: 0; /* background: rgba(25,63,235,0.1); */ }
+        .tap-zone-left { left: 0; }
+        .tap-zone-right { right: 0; }
         
         @media (max-width: 600px) {
             body { font-size: 16px; }
@@ -89,7 +89,6 @@
 </head>
 <body>
 
-    <!-- LIBRARY SECTION -->
     <div id="library-section" class="section active">
         <h1>📚 Read Ease</h1>
         
@@ -111,15 +110,14 @@
         <div id="my-books-list"></div>
         
         <div class="nav">
-            <button class="active" onclick="showSection('library', this)"> Library</button>
+            <button class="active" onclick="showSection('library', this)">📚 Library</button>
             <button onclick="showSection('download', this)">🔍 Download</button>
             <button onclick="showSection('settings', this)">⚙️ Settings</button>
         </div>
     </div>
 
-    <!-- DOWNLOAD SECTION -->
     <div id="download-section" class="section">
-        <h1> Download Free Books</h1>
+        <h1>🔍 Download Free Books</h1>
         
         <div class="source-selector">
             <label>Choose Source:</label>
@@ -151,9 +149,8 @@
         </div>
     </div>
 
-    <!-- SETTINGS SECTION -->
     <div id="settings-section" class="section">
-        <h1>️ Settings</h1>
+        <h1>⚙️ Settings</h1>
         
         <h2>Font Size: <span id="size-val">18</span>px</h2>
         <input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%; height: 40px; margin: 15px 0;">
@@ -174,18 +171,17 @@
         <div style="text-align: center; color: #666;">Speed: <span id="rate-val">0.9</span>x</div>
         
         <div class="nav">
-            <button onclick="showSection('library', this)"> Library</button>
+            <button onclick="showSection('library', this)">📚 Library</button>
             <button onclick="showSection('download', this)">🔍 Download</button>
             <button class="active" onclick="showSection('settings', this)">⚙️ Settings</button>
         </div>
     </div>
 
-    <!-- READER VIEW -->
     <div id="reader">
         <div id="reader-header">
             <button class="btn btn-secondary" onclick="closeReader()" style="width:auto; padding: 10px 15px;">← Back</button>
             <h2 id="reader-title" style="margin:0; flex-grow:1; text-align:center; font-size: 16px;"></h2>
-            <button class="btn btn-danger" onclick="deleteBook()" style="width:auto; padding: 10px 15px;">🗑️</button>
+            <button class="btn btn-danger" onclick="deleteBook()" style="width:auto; padding: 10px 15px;">️</button>
         </div>
         
         <div class="progress-bar">
@@ -198,7 +194,6 @@
             <button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
         </div>
         
-        <!-- Tap zones for page turning -->
         <div id="reader-content">
             <div class="tap-zone-left" onclick="handleTapZone('left')"></div>
             <div id="reader-text-wrapper" style="position: relative; z-index: 1;"></div>
@@ -212,7 +207,6 @@
         </div>
     </div>
 
-    <!-- CREATE FOLDER MODAL -->
     <div id="folder-modal" class="modal" onclick="if(event.target===this) closeFolderModal()">
         <div class="modal-content">
             <h2>Create New Folder</h2>
@@ -225,13 +219,14 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
-        // Initialize IndexedDB with Dexie
         const db = new Dexie('ReadEaseDB');
         db.version(1).stores({
             books: '++id, title, author, type, content, cover, progress, folder, source, timestamp',
             folders: '++id, name, created'
         });
         
+        let books = [];
+        let folders = [];
         let currentBook = null;
         let currentFolder = null;
         let currentCategory = 'all';
@@ -245,7 +240,6 @@
         const synth = window.speechSynthesis;
         let currentUtterance = null;
 
-        // Book sources configuration
         const sources = {
             gutenberg: {
                 name: 'Project Gutenberg',
@@ -642,21 +636,28 @@
         }
 
         async function downloadFromSource(url, title, author, coverUrl) {
-            if (!url) {
-                alert('This book cannot be downloaded directly. Please visit the source website.');
+            // FIXED: Check if URL exists before trying to download
+            if (!url || url.trim() === '') {
+                alert('Sorry, this book is not available in plain text format. Try searching for a different book or use Project Gutenberg source.');
                 return;
             }
             
-            alert('Downloading: ' + title);
+            alert('Downloading: ' + title + '\nPlease wait...');
             
             try {
+                console.log('Downloading from:', url);
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Download failed');
+                    throw new Error('Download failed with status: ' + response.status);
                 }
                 
                 const text = await response.text();
+                
+                if (!text || text.trim().length < 50) {
+                    throw new Error('Downloaded file is empty or invalid');
+                }
+                
                 const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
                 
                 const book = {
@@ -677,7 +678,7 @@
                 
             } catch (err) {
                 console.error('Download error:', err);
-                alert('Download failed. The file might not be available in text format.');
+                alert('Download failed: ' + err.message + '\n\nThis book might only be available in other formats (PDF, EPUB). Try a different book or source.');
             }
         }
 
@@ -726,16 +727,34 @@
             stopRead();
         }
 
-        // TAP ZONE HANDLERS
         function handleTapZone(zone) {
             const content = document.getElementById('reader-content');
             if (zone === 'left') {
-                // Scroll up 80% of viewport
                 content.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
             } else if (zone === 'right') {
-                // Scroll down 80% of viewport
                 content.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
             }
+        }
+
+        // FIXED: Zoom functions now work properly
+        function zoomIn() {
+            readerFontSize += 2;
+            if (readerFontSize > 40) readerFontSize = 40;
+            const textWrapper = document.getElementById('reader-text-wrapper');
+            if (textWrapper) {
+                textWrapper.style.fontSize = readerFontSize + 'px';
+            }
+            console.log('Zoomed in to:', readerFontSize);
+        }
+
+        function zoomOut() {
+            readerFontSize -= 2;
+            if (readerFontSize < 14) readerFontSize = 14;
+            const textWrapper = document.getElementById('reader-text-wrapper');
+            if (textWrapper) {
+                textWrapper.style.fontSize = readerFontSize + 'px';
+            }
+            console.log('Zoomed out to:', readerFontSize);
         }
 
         async function deleteBook() {
@@ -759,7 +778,6 @@
             }
         }
 
-        // KARAOKE TTS WITH HIGHLIGHTING
         function toggleRead() {
             if (isSpeaking && !isPaused) {
                 synth.pause();
@@ -772,7 +790,6 @@
                 isPaused = false;
                 document.getElementById('pause-btn').innerText = '⏸️ Pause';
             } else {
-                // Get all paragraphs for reading
                 const paragraphs = document.querySelectorAll('#reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3');
                 speechQueue = Array.from(paragraphs).map(p => p.innerText.trim()).filter(t => t.length > 0);
                 
@@ -796,12 +813,10 @@
             if (currentSpeechIndex < speechQueue.length && isSpeaking && !isPaused) {
                 const text = speechQueue[currentSpeechIndex];
                 
-                // Remove previous highlights
                 document.querySelectorAll('.highlighted, .speaking').forEach(el => {
                     el.classList.remove('highlighted', 'speaking');
                 });
                 
-                // Find and highlight current paragraph
                 const paragraphs = document.querySelectorAll('#reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3');
                 if (paragraphs[currentSpeechIndex]) {
                     paragraphs[currentSpeechIndex].classList.add('speaking');
@@ -864,30 +879,16 @@
             document.getElementById('rate-val').innerText = ttsRate.toFixed(1);
         }
 
-        function zoomIn() {
-            readerFontSize += 2;
-            if (readerFontSize > 40) readerFontSize = 40;
-            document.getElementById('reader-text-wrapper').style.fontSize = readerFontSize + 'px';
-        }
-
-        function zoomOut() {
-            readerFontSize -= 2;
-            if (readerFontSize < 14) readerFontSize = 14;
-            document.getElementById('reader-text-wrapper').style.fontSize = readerFontSize + 'px';
-        }
-
         async function saveProgress() {
-            if (!currentBook || !currentBook.id) return;
+            if (!currentBook || !currentBook.id || currentBook.id.startsWith('pre_')) return;
             
             const content = document.getElementById('reader-content');
             const scrollPercent = (content.scrollTop / (content.scrollHeight - content.clientHeight)) * 100;
             const progress = Math.round(Math.max(0, Math.min(100, scrollPercent)));
             
-            if (currentBook.id && !currentBook.id.startsWith('pre_')) {
-                await db.books.update(currentBook.id, { progress: progress });
-                await loadBooks();
-                alert('✅ Progress saved at ' + progress + '%');
-            }
+            await db.books.update(currentBook.id, { progress: progress });
+            await loadBooks();
+            alert('✅ Progress saved at ' + progress + '%');
         }
 
         function updateProgressBar() {
