@@ -4,53 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>ReadEase</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; touch-action: manipulation; }
         h1 { color: #2563eb; margin-bottom: 20px; font-size: 1.8em; }
-        h2 { color: #2563eb; margin: 20px 0 10px 0; }
-        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; }
-        .btn:active { opacity: 0.9; }
+        h2 { color: #2563eb; margin: 20px 0 10px 0; font-size: 1.3em; }
+        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; touch-action: manipulation; }
+        .btn:active { opacity: 0.9; transform: scale(0.98); }
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
         .btn-success { background: #10b981; }
         .book-card { background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
         .book-info { flex-grow: 1; cursor: pointer; padding: 10px; }
-        .book-title { font-weight: bold; font-size: 1.1em; }
+        .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .book-author { font-size: 0.9em; color: #666; }
         .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; margin-top: 5px; }
         .book-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 8px; margin-right: 15px; background: #ddd; }
         input[type="text"], select { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; }
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
-        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; }
         #reader-text-wrapper { position: relative; z-index: 1; }
-        #reader-text-wrapper p { margin: 10px 0; }
-        #reader-content .speaking { background-color: #fde047; padding: 2px 4px; border-radius: 4px; font-weight: bold; }
-        #reader-controls { display: flex; gap: 10px; padding: 15px 0; border-top: 2px solid #2563eb; }
-        #reader-controls .btn { flex: 1; }
+        #reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3 { margin: 10px 0; }
+        #reader-content .highlighted { background-color: #fef08a; }
+        #reader-content .speaking { background-color: #fde047; font-weight: bold; }
+        #reader-controls { display: flex; gap: 10px; padding: 15px 0; border-top: 2px solid #2563eb; flex-wrap: wrap; }
+        #reader-controls .btn { flex: 1; min-width: 100px; }
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #f3f4f6; display: flex; justify-content: space-around; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 50; }
         .nav button { background: none; border: none; font-size: 14px; cursor: pointer; padding: 5px; flex: 1; }
         .nav button.active { color: #2563eb; font-weight: bold; border-bottom: 3px solid #2563eb; }
         #file-input { display: none; }
         .upload-area { background: #e0e7ff; border: 3px dashed #2563eb; border-radius: 12px; padding: 30px; text-align: center; margin: 15px 0; cursor: pointer; }
+        .upload-area:active { background: #c7d2fe; }
         .section { display: none; }
         .section.active { display: block; }
         .folder-card { background: #e0e7ff; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .folder-card:active { background: #c7d2fe; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         .progress-bar { width: 100%; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px 0; }
-        .progress-fill { height: 100%; background: #2563eb; transition: width 0.3s; }
+        .progress-fill { height: 100%; background: #2563eb; border-radius: 2px; transition: width 0.3s; }
         .reader-zoom-controls { display: flex; gap: 10px; margin: 10px 0; }
-        .reader-zoom-controls button { flex: 1; padding: 10px; }
+        .reader-zoom-controls button { flex: 1; padding: 10px; font-size: 14px; }
         .category-tabs { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
         .category-tabs button { flex: 1; min-width: 100px; padding: 10px; font-size: 14px; }
         .category-tabs button.active { background: #2563eb; color: white; }
+        .source-selector { margin: 15px 0; }
+        .source-selector label { display: block; margin-bottom: 5px; font-weight: bold; }
         .tap-zone-left, .tap-zone-right { position: absolute; top: 0; bottom: 0; width: 20%; z-index: 10; }
         .tap-zone-left { left: 0; }
         .tap-zone-right { right: 0; }
@@ -59,11 +65,11 @@
 <body>
 
     <div id="library-section" class="section active">
-        <h1> ReadEase</h1>
-        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+        <h1>📚 ReadEase</h1>
+        <div class="upload-area" onclick="handleUploadClick()">
             <div style="font-size: 48px;">📤</div>
             <div style="font-size: 18px; font-weight: bold;">Tap to Upload Book</div>
-            <div style="color: #666;">Supports: PDF, EPUB, TXT, HTML</div>
+            <div style="color: #666; margin-top: 5px;">Supports: PDF, EPUB, TXT, HTML</div>
         </div>
         <input type="file" id="file-input" accept=".txt,.pdf,.epub,.html" onchange="handleUpload(event)">
         
@@ -87,10 +93,11 @@
     <div id="download-section" class="section">
         <h1>🔍 Download Free Books</h1>
         
-        <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Choose Source:</label>
-            <select id="source-select">
+        <div class="source-selector">
+            <label>Choose Source:</label>
+            <select id="source-select" onchange="changeSource()">
                 <option value="gutenberg">⭐ Project Gutenberg (Recommended)</option>
+                <option value="standardebooks">Standard Ebooks</option>
             </select>
         </div>
         
@@ -102,8 +109,8 @@
             <button class="btn btn-secondary" onclick="setCategory('adventure', this)">⚔️ Adventure</button>
         </div>
         
-        <input type="text" id="search-box" placeholder="Search books (e.g., Alice, Sherlock, Peter)..." onkeypress="if(event.key==='Enter') searchBooks()">
-        <button class="btn" onclick="searchBooks()">🔍 Search</button>
+        <input type="text" id="search-box" placeholder="Search for books (e.g., Alice, Sherlock)..." autocomplete="off">
+        <button class="btn" onclick="searchBooks()">Search</button>
         <div id="search-results"></div>
         
         <div class="nav">
@@ -130,8 +137,8 @@
         <button class="btn btn-secondary" onclick="setFont('Arial, sans-serif')">Sans Serif</button>
         <button class="btn btn-secondary" onclick="setFont('Comic Sans MS, cursive')">Kids/Dyslexia</button>
         
-        <h2 style="margin-top: 30px;">Voice Speed</h2>
-        <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="ttsRate=this.value; document.getElementById('rate-val').innerText=this.value" style="width:100%; height: 40px; margin: 15px 0;">
+        <h2 style="margin-top: 30px;">TTS Voice Speed</h2>
+        <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="updateTTSRate(this.value)" style="width:100%; height: 40px; margin: 15px 0;">
         <div style="text-align: center; color: #666;">Speed: <span id="rate-val">0.9</span>x</div>
         
         <div class="nav">
@@ -148,10 +155,12 @@
             <button class="btn btn-danger" onclick="deleteBook()" style="width:auto; padding: 10px 15px;">🗑️</button>
         </div>
         
-        <div class="progress-bar"><div class="progress-fill" id="reading-progress" style="width: 0%"></div></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="reading-progress" style="width: 0%"></div>
+        </div>
         
         <div class="reader-zoom-controls">
-            <button class="btn btn-secondary" onclick="zoomIn()">🔍+</button>
+            <button class="btn btn-secondary" onclick="zoomIn()">+</button>
             <button class="btn btn-secondary" onclick="zoomOut()">🔍-</button>
             <button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
         </div>
@@ -172,7 +181,7 @@
     <div id="folder-modal" class="modal" onclick="if(event.target===this) closeFolderModal()">
         <div class="modal-content">
             <h2>Create New Folder</h2>
-            <input type="text" id="folder-name" placeholder="Folder name">
+            <input type="text" id="folder-name" placeholder="Folder name (e.g., Kids Books, Horror)">
             <button class="btn" onclick="createFolder()">Create</button>
             <button class="btn btn-secondary" onclick="closeFolderModal()">Cancel</button>
         </div>
@@ -183,27 +192,57 @@
         
         const db = new Dexie('ReadEaseDB');
         db.version(1).stores({
-            books: '++id, title, author, type, content, cover, progress, folder, timestamp',
+            books: '++id, title, author, type, content, cover, progress, folder, source, timestamp',
             folders: '++id, name, created'
         });
         
-        let books = [], folders = [], currentBook = null, currentFolder = null;
-        let isSpeaking = false, isPaused = false, speechQueue = [], currentSpeechIndex = 0;
-        let readerFontSize = 18, ttsRate = 0.9, currentCategory = 'all';
+        let books = [];
+        let folders = [];
+        let currentBook = null;
+        let currentFolder = null;
+        let currentCategory = 'all';
+        let currentSource = 'gutenberg';
+        let isSpeaking = false;
+        let isPaused = false;
+        let speechQueue = [];
+        let currentSpeechIndex = 0;
+        let readerFontSize = 18;
+        let ttsRate = 0.9;
         const synth = window.speechSynthesis;
         let currentUtterance = null;
 
+        const sources = {
+            gutenberg: {
+                name: 'Project Gutenberg',
+                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`
+            },
+            standardebooks: {
+                name: 'Standard Ebooks',
+                searchUrl: (query) => `https://standardebooks.org/opds/search/${encodeURIComponent(query)}`
+            }
+        };
+
         const categories = {
             all: [],
-            children: ['alice', 'peter pan', 'winnie', 'fairy', 'children', 'kids', 'wonderland'],
-            classics: ['dickens', 'austen', 'twain', 'shakespeare', 'classic', 'pride', 'gatsby'],
+            children: ['alice', 'peter pan', 'winnie', 'fairy tale', 'children', 'kids', 'wonderland'],
+            classics: ['dickens', 'austen', 'twain', 'shakespeare', 'classic', 'pride'],
             fiction: ['novel', 'fiction', 'story', 'romance'],
             adventure: ['adventure', 'treasure', 'journey', 'expedition', 'huckleberry', 'island']
         };
 
         const preloadedBooks = [
-            { title: 'Alice in Wonderland', author: 'Lewis Carroll', type: 'TXT', content: '<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank.</p><p>Suddenly a White Rabbit with pink eyes ran close by her.</p>' },
-            { title: "Aesop's Fables", author: 'Aesop', type: 'TXT', content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise for being so slow.</p><p>"I will run you a race," said the Tortoise.</p>' }
+            { 
+                title: 'Alice in Wonderland', 
+                author: 'Lewis Carroll', 
+                type: 'TXT', 
+                content: '<h2>Chapter 1: Down the Rabbit-Hole</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do.</p><p>Suddenly a White Rabbit with pink eyes ran close by her.</p>' 
+            },
+            { 
+                title: "Aesop's Fables", 
+                author: 'Aesop', 
+                type: 'TXT', 
+                content: '<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise one day for being so slow.</p><p>"I will run you a race and prove it," said the Tortoise.</p>' 
+            }
         ];
 
         async function init() {
@@ -212,192 +251,396 @@
             renderPreloaded();
         }
 
-        async function loadFolders() { folders = await db.folders.toArray(); renderFolders(); }
-        async function loadBooks() { books = await db.books.toArray(); renderMyBooks(); }
+        async function loadFolders() {
+            folders = await db.folders.toArray();
+            renderFolders();
+        }
+
+        async function loadBooks() {
+            books = await db.books.toArray();
+            renderMyBooks();
+        }
 
         function renderFolders() {
-            const c = document.getElementById('folders-list');
-            if (folders.length === 0) { c.innerHTML = '<p style="color:#666; padding:10px;">No folders yet</p>'; return; }
-            c.innerHTML = '';
-            folders.forEach((f, i) => {
-                const count = books.filter(b => b.folder === f.name).length;
-                c.innerHTML += `<div class="folder-card" onclick="openFolder('${f.name}')"><div><div style="font-weight:bold;">📁 ${f.name}</div><div style="font-size:0.9em;color:#666;">${count} books</div></div><button class="btn btn-danger" onclick="deleteFolder(${i},event)" style="width:auto;padding:8px;">🗑️</button></div>`;
+            const container = document.getElementById('folders-list');
+            if (folders.length === 0) {
+                container.innerHTML = '<p style="color:#666; padding:10px;">No folders yet. Create one!</p>';
+                return;
+            }
+            container.innerHTML = '';
+            folders.forEach((folder, index) => {
+                const bookCount = books.filter(b => b.folder === folder.name).length;
+                container.innerHTML += `
+                    <div class="folder-card" onclick="openFolder('${folder.name}')">
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.1em;">📁 ${folder.name}</div>
+                            <div style="font-size: 0.9em; color: #666;">${bookCount} books</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteFolder(${index}, event)" style="width:auto; padding: 8px;">️</button>
+                    </div>
+                `;
             });
         }
 
         function renderPreloaded() {
-            const c = document.getElementById('preloaded-list');
-            c.innerHTML = '';
-            preloadedBooks.forEach((b, i) => {
-                c.innerHTML += `<div class="book-card" onclick="openPreloadedBook(${i})"><div class="book-info"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><div class="book-type">${b.type}</div></div></div>`;
+            const container = document.getElementById('preloaded-list');
+            container.innerHTML = '';
+            preloadedBooks.forEach((book, index) => {
+                container.innerHTML += `
+                    <div class="book-card" onclick="openPreloadedBook(${index})">
+                        <div class="book-info">
+                            <div class="book-title">${book.title}</div>
+                            <div class="book-author">${book.author}</div>
+                            <div class="book-type">${book.type}</div>
+                        </div>
+                    </div>
+                `;
             });
         }
 
         async function renderMyBooks() {
-            const c = document.getElementById('my-books-list');
+            const container = document.getElementById('my-books-list');
             const displayBooks = currentFolder ? books.filter(b => b.folder === currentFolder) : books;
-            if (displayBooks.length === 0) { c.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet. Upload or download!</p>'; return; }
-            c.innerHTML = '';
-            displayBooks.forEach(b => {
-                c.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook(b.id,false)"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><div class="book-type">${b.type}</div>${b.progress?`<div style="font-size:0.8em;color:#10b981;">📖 ${b.progress}%</div>`:''}</div><button class="btn btn-danger" onclick="deleteBookFromDB(b.id,event)" style="width:auto;padding:10px;">🗑️</button></div>`;
+            
+            if (displayBooks.length === 0) {
+                container.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet.<br>Upload or download some!</p>';
+                return;
+            }
+            container.innerHTML = '';
+            displayBooks.forEach((book) => {
+                container.innerHTML += `
+                    <div class="book-card">
+                        <div class="book-info" onclick="openBook(book.id, false)">
+                            <div class="book-title">${book.title}</div>
+                            <div class="book-author">${book.author}</div>
+                            <div class="book-type">${book.type}</div>
+                            ${book.progress ? `<div style="font-size: 0.8em; color: #10b981;">📖 Saved at ${book.progress}%</div>` : ''}
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteBookFromDB(book.id, event)" style="width:auto; padding: 10px;">🗑️</button>
+                    </div>
+                `;
             });
         }
 
-        function showSection(name, btn) {
+        function showSection(sectionName, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(name+'-section').classList.add('active');
+            document.getElementById(sectionName + '-section').classList.add('active');
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
             if(btn) btn.classList.add('active');
-            if(name==='library') { currentFolder=null; renderMyBooks(); }
+            if (sectionName === 'library') {
+                currentFolder = null;
+                renderMyBooks();
+            }
         }
 
-        function setCategory(cat, btn) {
-            currentCategory = cat;
+        function changeSource() {
+            currentSource = document.getElementById('source-select').value;
+        }
+
+        function setCategory(category, btn) {
+            currentCategory = category;
             document.querySelectorAll('.category-tabs button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
 
-        function showCreateFolderModal() { document.getElementById('folder-modal').style.display = 'flex'; }
-        function closeFolderModal() { document.getElementById('folder-modal').style.display = 'none'; document.getElementById('folder-name').value = ''; }
+        function showCreateFolderModal() {
+            document.getElementById('folder-modal').style.display = 'flex';
+        }
+
+        function closeFolderModal() {
+            document.getElementById('folder-modal').style.display = 'none';
+            document.getElementById('folder-name').value = '';
+        }
 
         async function createFolder() {
             const name = document.getElementById('folder-name').value.trim();
-            if(!name) { alert('Enter folder name'); return; }
-            if(folders.find(f => f.name === name)) { alert('Folder exists'); return; }
-            await db.folders.add({ name, created: Date.now() });
+            if (!name) {
+                alert('Please enter a folder name');
+                return;
+            }
+            if (folders.find(f => f.name === name)) {
+                alert('Folder already exists');
+                return;
+            }
+            await db.folders.add({ name: name, created: Date.now() });
             await loadFolders();
             closeFolderModal();
             alert('✅ Folder created!');
         }
 
-        async function deleteFolder(i, e) {
-            e.stopPropagation();
-            if(!confirm('Delete folder?')) return;
-            const name = folders[i].name;
-            books.filter(b => b.folder === name).forEach(b => { delete b.folder; db.books.update(b.id, {folder:null}); });
-            await db.folders.delete(folders[i].id);
-            await loadFolders(); await loadBooks();
+        async function deleteFolder(index, event) {
+            event.stopPropagation();
+            if (confirm('Delete this folder? Books will be moved to main library.')) {
+                const folderName = folders[index].name;
+                const folderBooks = books.filter(b => b.folder === folderName);
+                for (let book of folderBooks) {
+                    delete book.folder;
+                    await db.books.update(book.id, { folder: null });
+                }
+                await db.folders.delete(folders[index].id);
+                await loadFolders();
+                await loadBooks();
+            }
         }
 
-        function openFolder(name) { currentFolder = name; renderMyBooks(); }
+        function openFolder(folderName) {
+            currentFolder = folderName;
+            renderMyBooks();
+        }
 
-        async function handleUpload(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            if(file.size > 50*1024*1024) { alert('File too large (max 50MB)'); return; }
+        function handleUploadClick() {
+            document.getElementById('file-input').click();
+        }
+
+        async function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             
-            const ext = file.name.split('.').pop().toLowerCase();
-            alert('Processing: ' + file.name);
+            if (file.size > 50 * 1024 * 1024) {
+                alert('File too large. Maximum size is 50MB.');
+                return;
+            }
+            
+            const fileName = file.name;
+            const ext = fileName.split('.').pop().toLowerCase();
+            
+            alert('Processing: ' + fileName);
             
             try {
                 let content = '';
-                if(ext === 'txt' || ext === 'html') {
-                    content = await file.text();
-                    if(ext === 'txt') content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
-                } else if(ext === 'pdf') {
-                    const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
-                    for(let i=1; i<=pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        content += `<h2>Page ${i}</h2><p>${(await page.getTextContent()).items.map(x=>x.str).join(' ')}</p>`;
+                
+                if (ext === 'txt' || ext === 'html') {
+                    content = await readFileAsText(file);
+                    if (ext === 'txt') {
+                        content = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
                     }
-                } else if(ext === 'epub') {
-                    const zip = await JSZip.loadAsync(await file.arrayBuffer());
-                    let txt = '';
-                    zip.forEach((p, f) => { if(p.match(/\.(xhtml|html)$/i) && !p.includes('META')) txt += await f.async('text'); });
-                    content = txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').split(/\n\s*\n/).filter(p=>p.length>50).map(p=>`<p>${p.trim()}</p>`).join('');
-                } else { alert('Unsupported format'); return; }
+                } else if (ext === 'pdf') {
+                    content = await extractPDFText(file);
+                } else if (ext === 'epub') {
+                    content = await extractEPUBText(file);
+                } else {
+                    alert('Unsupported file type. Please use TXT, PDF, EPUB, or HTML.');
+                    return;
+                }
                 
-                if(content.length < 50) { alert('Could not extract text'); return; }
+                if (!content || content.trim().length < 50) {
+                    alert('Could not extract text from file.');
+                    return;
+                }
                 
-                await db.books.add({
-                    title: file.name.replace(/\.[^/.]+/,'').replace(/_/g,' '),
-                    author: 'Uploaded', type: ext.toUpperCase(), content, cover: '', progress: 0,
-                    folder: currentFolder || null, timestamp: Date.now()
-                });
+                const book = {
+                    title: fileName.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
+                    author: 'Uploaded',
+                    type: ext.toUpperCase(),
+                    content: content,
+                    cover: '',
+                    progress: 0,
+                    folder: currentFolder || null,
+                    timestamp: Date.now()
+                };
+                
+                await db.books.add(book);
                 await loadBooks();
-                alert('✅ Uploaded!');
-                e.target.value = '';
-            } catch(err) { alert('Error: ' + err.message); }
+                alert('✅ Book uploaded successfully!');
+                event.target.value = '';
+                
+            } catch (err) {
+                console.error('Upload error:', err);
+                alert('Error uploading file: ' + err.message);
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        async function extractPDFText(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                let fullText = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += `<h2>Page ${i}</h2><p>${pageText}</p>`;
+                }
+                
+                return fullText;
+            } catch (err) {
+                throw new Error('Failed to extract PDF text: ' + err.message);
+            }
+        }
+
+        async function extractEPUBText(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                let content = '';
+                
+                zip.forEach((path, zipEntry) => {
+                    if (path.match(/\.(xhtml|html)$/i) && !path.includes('META-INF')) {
+                        content += zipEntry.async('text');
+                    }
+                });
+                
+                content = content.replace(/<script[\s\S]*?<\/script>/gi, '')
+                                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                                .replace(/<[^>]+>/g, ' ')
+                                .replace(/\s+/g, ' ')
+                                .trim();
+                
+                const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+                return paragraphs.map(p => `<p>${p.trim()}</p>`).join('') || '<p>Content extracted</p>';
+                
+            } catch (err) {
+                throw new Error('Failed to extract EPUB text: ' + err.message);
+            }
         }
 
         async function searchBooks() {
-            const q = document.getElementById('search-box').value.trim();
-            if(!q) { alert('Enter search term'); return; }
+            const query = document.getElementById('search-box').value.trim();
+            if (!query) {
+                alert('Please enter a search term');
+                return;
+            }
             
             const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;"> Searching...</div>';
+            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Searching...</div>';
             
             try {
-                const res = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(q)}`);
-                const data = await res.json();
-                const results = data.results || [];
+                let url = sources[currentSource].searchUrl(query);
+                const response = await fetch(url);
                 
-                if(results.length === 0) { resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">No books found</div>'; return; }
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+                
+                const data = await response.json();
+                let results = [];
+                if (data.results) results = data.results;
+                else if (data.entries) results = data.entries;
+                
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books found. Try a different search.</div>';
+                    return;
+                }
                 
                 resultsDiv.innerHTML = '';
                 let count = 0;
-                const keywords = categories[currentCategory] || [];
+                const categoryKeywords = categories[currentCategory] || [];
                 
-                for(const book of results.slice(0, 10)) {
-                    if(currentCategory !== 'all' && keywords.length > 0) {
-                        const title = (book.title || '').toLowerCase();
-                        if(!keywords.some(k => title.includes(k))) continue;
+                for (const book of results.slice(0, 10)) {
+                    if (currentCategory !== 'all' && categoryKeywords.length > 0) {
+                        const titleLower = (book.title || '').toLowerCase();
+                        const matchesCategory = categoryKeywords.some(keyword => titleLower.includes(keyword));
+                        if (!matchesCategory) continue;
                     }
                     
-                    const url = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
-                    if(!url) continue;
-                    
                     count++;
-                    const author = book.authors?.[0]?.name || 'Unknown';
-                    resultsDiv.innerHTML += `
-                        <div class="book-card">
-                            <div class="book-info">
-                                <div class="book-title">${book.title}</div>
-                                <div class="book-author">${author}</div>
-                                <div class="book-type">Project Gutenberg</div>
+                    const title = book.title || 'Unknown Title';
+                    const author = book.authors ? (book.authors[0]?.name || book.authors[0] || 'Unknown') : 'Unknown';
+                    
+                    let downloadUrl = '';
+                    if (currentSource === 'gutenberg') {
+                        downloadUrl = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
+                    }
+                    
+                    if (downloadUrl) {
+                        resultsDiv.innerHTML += `
+                            <div class="book-card">
+                                <div class="book-info">
+                                    <div class="book-title">${title}</div>
+                                    <div class="book-author">${author}</div>
+                                    <div class="book-type">${sources[currentSource].name}</div>
+                                </div>
+                                <button class="btn btn-success" onclick="downloadBook('${downloadUrl}', '${title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button>
                             </div>
-                            <button class="btn btn-success" onclick="downloadBook('${url}','${book.title.replace(/'/g,"\\'")}','${author.replace(/'/g,"\\'")}')">Download</button>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
                 
-                if(count === 0) resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">No books with text format found. Try different search or category.</div>';
+                if (count === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books available for download. Try Project Gutenberg source or different search.</div>';
+                }
                 
-            } catch(err) {
-                console.error(err);
-                resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444;">Error searching. Check internet connection.</div>';
+            } catch (err) {
+                console.error('Search error:', err);
+                resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Error searching. Please check your internet connection.</div>';
             }
         }
 
         async function downloadBook(url, title, author) {
-            if(!url) { alert('No text format available'); return; }
-            alert('Downloading: ' + title);
+            if (!url || url.trim() === '') {
+                alert('Sorry, this book is not available in plain text format.\n\n💡 Tip: Use Project Gutenberg source for best results.');
+                return;
+            }
+            
+            alert('Downloading: ' + title + '\n\nPlease wait...');
             
             try {
-                const text = await (await fetch(url)).text();
-                if(text.length < 50) throw new Error('Empty file');
+                const response = await fetch(url);
                 
-                const content = text.split('\n\n').map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
                 
-                await db.books.add({
-                    title, author, type: 'TXT', content, cover: '', progress: 0,
-                    folder: currentFolder || null, timestamp: Date.now()
-                });
+                const text = await response.text();
+                
+                if (!text || text.trim().length < 50) {
+                    throw new Error('Downloaded file is empty');
+                }
+                
+                const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                
+                const book = {
+                    title: title,
+                    author: author,
+                    type: 'TXT',
+                    content: paragraphs,
+                    cover: '',
+                    progress: 0,
+                    folder: currentFolder || null,
+                    source: currentSource,
+                    timestamp: Date.now()
+                };
+                
+                await db.books.add(book);
                 await loadBooks();
-                alert('✅ Downloaded! Check Library.');
-            } catch(err) {
-                alert('Download failed: ' + err.message);
+                alert('✅ Downloaded successfully! Check your Library.');
+                
+            } catch (err) {
+                console.error('Download error:', err);
+                alert('Download failed: ' + err.message + '\n\nTry using Project Gutenberg source instead.');
             }
         }
 
-        async function openPreloadedBook(i) {
-            currentBook = { ...preloadedBooks[i], id: 'pre_'+i };
+        async function openPreloadedBook(index) {
+            const book = preloadedBooks[index];
+            currentBook = { ...book, id: 'pre_' + index };
             await openReader();
         }
 
-        async function openBook(id, isPre) {
-            currentBook = isPre ? preloadedBooks.find(b => b.id === id) : await db.books.get(id);
-            if(!currentBook) { alert('Book not found'); return; }
+        async function openBook(id, isPreloaded) {
+            if (isPreloaded) {
+                const book = preloadedBooks.find(b => b.id === id);
+                currentBook = { ...book };
+            } else {
+                const book = await db.books.get(id);
+                currentBook = book;
+            }
+            
+            if (!currentBook) {
+                alert('Book not found');
+                return;
+            }
+            
             await openReader();
         }
 
@@ -407,103 +650,217 @@
             document.getElementById('reader-text-wrapper').style.fontSize = readerFontSize + 'px';
             document.getElementById('reader').style.display = 'flex';
             stopRead();
-            if(currentBook.progress) {
-                const c = document.getElementById('reader-content');
-                c.scrollTop = (currentBook.progress/100) * c.scrollHeight;
+            
+            if (currentBook.progress) {
+                const content = document.getElementById('reader-content');
+                const scrollPos = (currentBook.progress / 100) * content.scrollHeight;
+                content.scrollTop = scrollPos;
                 updateProgressBar();
             }
         }
 
-        function closeReader() { saveProgress(); document.getElementById('reader').style.display = 'none'; currentBook = null; stopRead(); }
+        function closeReader() {
+            saveProgress();
+            document.getElementById('reader').style.display = 'none';
+            currentBook = null;
+            stopRead();
+        }
 
         function handleTapZone(zone) {
-            const c = document.getElementById('reader-content');
-            c.scrollBy({ top: (zone==='left'?-1:1) * window.innerHeight * 0.8, behavior: 'smooth' });
+            const content = document.getElementById('reader-content');
+            if (zone === 'left') {
+                content.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
+            } else if (zone === 'right') {
+                content.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+            }
         }
 
-        function zoomIn() { readerFontSize = Math.min(40, readerFontSize+2); document.getElementById('reader-text-wrapper').style.fontSize = readerFontSize + 'px'; }
-        function zoomOut() { readerFontSize = Math.max(14, readerFontSize-2); document.getElementById('reader-text-wrapper').style.fontSize = readerFontSize + 'px'; }
+        function zoomIn() {
+            readerFontSize += 2;
+            if (readerFontSize > 40) readerFontSize = 40;
+            const textWrapper = document.getElementById('reader-text-wrapper');
+            if (textWrapper) {
+                textWrapper.style.fontSize = readerFontSize + 'px';
+            }
+        }
+
+        function zoomOut() {
+            readerFontSize -= 2;
+            if (readerFontSize < 14) readerFontSize = 14;
+            const textWrapper = document.getElementById('reader-text-wrapper');
+            if (textWrapper) {
+                textWrapper.style.fontSize = readerFontSize + 'px';
+            }
+        }
 
         async function deleteBook() {
-            if(!currentBook?.id || currentBook.id.startsWith('pre_')) { alert('Cannot delete'); return; }
-            if(!confirm('Delete?')) return;
-            await db.books.delete(currentBook.id);
-            await loadBooks();
-            closeReader();
+            if (!currentBook || !currentBook.id) {
+                alert('Cannot delete preloaded books');
+                return;
+            }
+            
+            if (confirm('Delete this book?')) {
+                await db.books.delete(currentBook.id);
+                await loadBooks();
+                closeReader();
+            }
         }
 
-        async function deleteBookFromDB(id, e) {
-            e.stopPropagation();
-            if(!confirm('Delete?')) return;
-            await db.books.delete(id);
-            await loadBooks();
+        async function deleteBookFromDB(id, event) {
+            event.stopPropagation();
+            if (confirm('Delete this book?')) {
+                await db.books.delete(id);
+                await loadBooks();
+            }
         }
 
         function toggleRead() {
-            if(isSpeaking && !isPaused) { synth.pause(); isPaused = true; document.getElementById('read-btn').style.display='none'; document.getElementById('pause-btn').style.display='inline-block'; document.getElementById('pause-btn').innerText='▶️ Resume'; }
-            else if(isPaused) { synth.resume(); isPaused = false; document.getElementById('pause-btn').innerText='️ Pause'; }
-            else {
-                speechQueue = Array.from(document.querySelectorAll('#reader-text-wrapper p')).map(p => p.innerText.trim()).filter(t => t.length > 0);
-                if(speechQueue.length === 0) speechQueue = [document.getElementById('reader-text-wrapper').innerText];
-                currentSpeechIndex = 0; isSpeaking = true; isPaused = false;
-                document.getElementById('read-btn').style.display='none'; document.getElementById('pause-btn').style.display='inline-block';
+            if (isSpeaking && !isPaused) {
+                synth.pause();
+                isPaused = true;
+                document.getElementById('read-btn').style.display = 'none';
+                document.getElementById('pause-btn').style.display = 'inline-block';
+                document.getElementById('pause-btn').innerText = '▶️ Resume';
+            } else if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+            } else {
+                const paragraphs = document.querySelectorAll('#reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3');
+                speechQueue = Array.from(paragraphs).map(p => p.innerText.trim()).filter(t => t.length > 0);
+                
+                if (speechQueue.length === 0) {
+                    const text = document.getElementById('reader-text-wrapper').innerText;
+                    speechQueue = [text];
+                }
+                
+                currentSpeechIndex = 0;
+                isSpeaking = true;
+                isPaused = false;
+                document.getElementById('read-btn').style.display = 'none';
+                document.getElementById('pause-btn').style.display = 'inline-block';
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+                
                 speakNextChunk();
             }
         }
 
         function speakNextChunk() {
-            if(currentSpeechIndex >= speechQueue.length || (!isSpeaking || isPaused)) { if(currentSpeechIndex >= speechQueue.length) stopRead(); return; }
-            
-            const text = speechQueue[currentSpeechIndex];
-            document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
-            const paragraphs = document.querySelectorAll('#reader-text-wrapper p');
-            if(paragraphs[currentSpeechIndex]) {
-                paragraphs[currentSpeechIndex].classList.add('speaking');
-                paragraphs[currentSpeechIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (currentSpeechIndex < speechQueue.length && isSpeaking && !isPaused) {
+                const text = speechQueue[currentSpeechIndex];
+                
+                document.querySelectorAll('.highlighted, .speaking').forEach(el => {
+                    el.classList.remove('highlighted', 'speaking');
+                });
+                
+                const paragraphs = document.querySelectorAll('#reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3');
+                if (paragraphs[currentSpeechIndex]) {
+                    paragraphs[currentSpeechIndex].classList.add('speaking');
+                    paragraphs[currentSpeechIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.rate = ttsRate;
+                currentUtterance.pitch = 1;
+                
+                currentUtterance.onend = () => {
+                    if (paragraphs[currentSpeechIndex]) {
+                        paragraphs[currentSpeechIndex].classList.remove('speaking');
+                        paragraphs[currentSpeechIndex].classList.add('highlighted');
+                    }
+                    currentSpeechIndex++;
+                    setTimeout(() => speakNextChunk(), 200);
+                };
+                
+                currentUtterance.onerror = (e) => {
+                    console.error('TTS error:', e);
+                    currentSpeechIndex++;
+                    setTimeout(() => speakNextChunk(), 200);
+                };
+                
+                synth.speak(currentUtterance);
+            } else if (currentSpeechIndex >= speechQueue.length) {
+                stopRead();
             }
-            
-            currentUtterance = new SpeechSynthesisUtterance(text);
-            currentUtterance.rate = ttsRate;
-            currentUtterance.onend = () => { currentSpeechIndex++; setTimeout(speakNextChunk, 200); };
-            currentUtterance.onerror = () => { currentSpeechIndex++; setTimeout(speakNextChunk, 200); };
-            synth.speak(currentUtterance);
         }
 
         function pauseRead() {
-            if(isPaused) { synth.resume(); isPaused = false; document.getElementById('pause-btn').innerText='⏸️ Pause'; }
-            else { synth.pause(); isPaused = true; document.getElementById('pause-btn').innerText='▶️ Resume'; }
+            if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+            } else {
+                synth.pause();
+                isPaused = true;
+                document.getElementById('pause-btn').innerText = '▶️ Resume';
+            }
         }
 
         function stopRead() {
-            synth.cancel(); isSpeaking = false; isPaused = false; speechQueue = []; currentSpeechIndex = 0;
-            document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
-            document.getElementById('read-btn').style.display='inline-block'; document.getElementById('pause-btn').style.display='none';
+            synth.cancel();
+            isSpeaking = false;
+            isPaused = false;
+            speechQueue = [];
+            currentSpeechIndex = 0;
+            currentUtterance = null;
+            document.querySelectorAll('.highlighted, .speaking').forEach(el => {
+                el.classList.remove('highlighted', 'speaking');
+            });
+            document.getElementById('read-btn').style.display = 'inline-block';
+            document.getElementById('pause-btn').style.display = 'none';
+        }
+
+        function updateTTSRate(val) {
+            ttsRate = parseFloat(val);
+            document.getElementById('rate-val').innerText = ttsRate.toFixed(1);
         }
 
         async function saveProgress() {
-            if(!currentBook?.id || currentBook.id.startsWith('pre_')) return;
-            const c = document.getElementById('reader-content');
-            const progress = Math.round((c.scrollTop / (c.scrollHeight - c.clientHeight)) * 100);
-            await db.books.update(currentBook.id, { progress });
+            if (!currentBook || !currentBook.id || currentBook.id.startsWith('pre_')) return;
+            
+            const content = document.getElementById('reader-content');
+            const scrollPercent = (content.scrollTop / (content.scrollHeight - content.clientHeight)) * 100;
+            const progress = Math.round(Math.max(0, Math.min(100, scrollPercent)));
+            
+            await db.books.update(currentBook.id, { progress: progress });
             await loadBooks();
-            alert('✅ Saved at ' + progress + '%');
+            alert('✅ Progress saved at ' + progress + '%');
         }
 
         function updateProgressBar() {
-            if(!currentBook) return;
-            const c = document.getElementById('reader-content');
-            document.getElementById('reading-progress').style.width = Math.round((c.scrollTop / (c.scrollHeight - c.clientHeight)) * 100) + '%';
+            if (!currentBook) return;
+            const content = document.getElementById('reader-content');
+            const scrollPercent = (content.scrollTop / (content.scrollHeight - content.clientHeight)) * 100;
+            const progress = Math.round(Math.max(0, Math.min(100, scrollPercent)));
+            document.getElementById('reading-progress').style.width = progress + '%';
         }
+
         document.getElementById('reader-content').addEventListener('scroll', updateProgressBar);
 
-        function changeSize(v) { document.body.style.fontSize = v + 'px'; document.getElementById('size-val').innerText = v; }
-        function setTheme(t) {
-            if(t==='sepia') { document.body.style.background='#f4ecd8'; document.body.style.color='#5b4636'; }
-            else if(t==='dark') { document.body.style.background='#121212'; document.body.style.color='#e0e0e0'; }
-            else if(t==='high-contrast') { document.body.style.background='#000'; document.body.style.color='#ff0'; }
-            else { document.body.style.background='#fff'; document.body.style.color='#000'; }
+        function changeSize(val) {
+            document.body.style.fontSize = val + 'px';
+            document.getElementById('size-val').innerText = val;
         }
-        function setFont(f) { document.body.style.fontFamily = f; }
+
+        function setTheme(theme) {
+            if (theme === 'sepia') {
+                document.body.style.background = '#f4ecd8';
+                document.body.style.color = '#5b4636';
+            } else if (theme === 'dark') {
+                document.body.style.background = '#121212';
+                document.body.style.color = '#e0e0e0';
+            } else if (theme === 'high-contrast') {
+                document.body.style.background = '#000000';
+                document.body.style.color = '#ffff00';
+            } else {
+                document.body.style.background = '#ffffff';
+                document.body.style.color = '#000000';
+            }
+        }
+
+        function setFont(font) {
+            document.body.style.fontFamily = font;
+        }
 
         init();
     </script>
