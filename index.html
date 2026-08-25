@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>ReadEase</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="https://cdn.fbsbx.com/v/t65.102178-21/786352729_999207496464046_4271226627932746885_n.jpg/readease_512x512.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -15,7 +17,7 @@
         body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; touch-action: manipulation; }
         h1 { color: #2563eb; margin-bottom: 20px; font-size: 1.8em; }
         h2 { color: #2563eb; margin: 20px 0 10px 0; font-size: 1.3em; }
-        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; touch-action: manipulation; }
+        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; }
         .btn:active { opacity: 0.9; transform: scale(0.98); }
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
@@ -26,10 +28,10 @@
         .book-author { font-size: 0.9em; color: #666; }
         .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; margin-top: 5px; }
         .book-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 8px; margin-right: 15px; background: #ddd; }
-        input[type="text"], select { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; }
+        input[type="text"], select { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; -webkit-appearance: none; }
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
-        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; }
+        #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; -webkit-overflow-scrolling: touch; }
         #reader-text-wrapper { position: relative; z-index: 1; }
         #reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3 { margin: 10px 0; }
         #reader-content .highlighted { background-color: #fef08a; }
@@ -60,6 +62,12 @@
         .tap-zone-left, .tap-zone-right { position: absolute; top: 0; bottom: 0; width: 20%; z-index: 10; }
         .tap-zone-left { left: 0; }
         .tap-zone-right { right: 0; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        @media (max-width: 600px) {
+            body { font-size: 16px; }
+            .btn { padding: 15px; font-size: 16px; }
+            h1 { font-size: 1.5em; }
+        }
     </style>
 </head>
 <body>
@@ -96,8 +104,9 @@
         <div class="source-selector">
             <label>Choose Source:</label>
             <select id="source-select" onchange="changeSource()">
-                <option value="gutenberg">⭐ Project Gutenberg (Recommended)</option>
-                <option value="standardebooks">Standard Ebooks</option>
+                <option value="gutenberg">⭐ Project Gutenberg (70,000+ books)</option>
+                <option value="standardebooks">Standard Ebooks (Quality)</option>
+                <option value="openlibrary">Open Library (1.7M books)</option>
             </select>
         </div>
         
@@ -110,12 +119,12 @@
         </div>
         
         <input type="text" id="search-box" placeholder="Search for books (e.g., Alice, Sherlock)..." autocomplete="off">
-        <button class="btn" onclick="searchBooks()">Search</button>
+        <button class="btn" onclick="searchBooks()"> Search</button>
         <div id="search-results"></div>
         
         <div class="nav">
-            <button onclick="showSection('library', this)"> Library</button>
-            <button class="active" onclick="showSection('download', this)"> Download</button>
+            <button onclick="showSection('library', this)">📚 Library</button>
+            <button class="active" onclick="showSection('download', this)">🔍 Download</button>
             <button onclick="showSection('settings', this)">⚙️ Settings</button>
         </div>
     </div>
@@ -160,8 +169,8 @@
         </div>
         
         <div class="reader-zoom-controls">
-            <button class="btn btn-secondary" onclick="zoomIn()">+</button>
-            <button class="btn btn-secondary" onclick="zoomOut()">🔍-</button>
+            <button class="btn btn-secondary" onclick="zoomIn()">🔍+</button>
+            <button class="btn btn-secondary" onclick="zoomOut()">-</button>
             <button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
         </div>
         
@@ -214,20 +223,36 @@
         const sources = {
             gutenberg: {
                 name: 'Project Gutenberg',
-                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`
+                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`,
+                getDownloadUrl: (book) => book.formats['text/plain; charset=utf-8'] || book.formats['text/plain']
             },
             standardebooks: {
                 name: 'Standard Ebooks',
-                searchUrl: (query) => `https://standardebooks.org/opds/search/${encodeURIComponent(query)}`
+                searchUrl: (query) => `https://standardebooks.org/opds/search/${encodeURIComponent(query)}`,
+                getDownloadUrl: (book) => {
+                    const links = book.links || [];
+                    const epub = links.find(l => l.type === 'application/epub+zip');
+                    return epub ? epub.href : null;
+                }
+            },
+            openlibrary: {
+                name: 'Open Library',
+                searchUrl: (query) => `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`,
+                getDownloadUrl: (book) => {
+                    if (book.key) {
+                        return `https://openlibrary.org${book.key}.txt`;
+                    }
+                    return null;
+                }
             }
         };
 
         const categories = {
             all: [],
-            children: ['alice', 'peter pan', 'winnie', 'fairy tale', 'children', 'kids', 'wonderland'],
-            classics: ['dickens', 'austen', 'twain', 'shakespeare', 'classic', 'pride'],
-            fiction: ['novel', 'fiction', 'story', 'romance'],
-            adventure: ['adventure', 'treasure', 'journey', 'expedition', 'huckleberry', 'island']
+            children: ['alice', 'peter pan', 'winnie', 'fairy', 'children', 'kids', 'wonderland', 'tale'],
+            classics: ['dickens', 'austen', 'twain', 'shakespeare', 'classic', 'pride', 'gatsby', 'jane'],
+            fiction: ['novel', 'fiction', 'story', 'romance', 'mystery'],
+            adventure: ['adventure', 'treasure', 'journey', 'expedition', 'huckleberry', 'island', 'robinson']
         };
 
         const preloadedBooks = [
@@ -276,7 +301,7 @@
                             <div style="font-weight: bold; font-size: 1.1em;">📁 ${folder.name}</div>
                             <div style="font-size: 0.9em; color: #666;">${bookCount} books</div>
                         </div>
-                        <button class="btn btn-danger" onclick="deleteFolder(${index}, event)" style="width:auto; padding: 8px;">️</button>
+                        <button class="btn btn-danger" onclick="deleteFolder(${index}, event)" style="width:auto; padding: 8px;">🗑️</button>
                     </div>
                 `;
             });
@@ -512,23 +537,28 @@
             }
             
             const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Searching...</div>';
+            resultsDiv.innerHTML = '<div class="loading">🔍 Searching...</div>';
             
             try {
-                let url = sources[currentSource].searchUrl(query);
+                const source = sources[currentSource];
+                const url = source.searchUrl(query);
+                
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Search failed');
+                    throw new Error('Search failed: ' + response.status);
                 }
                 
                 const data = await response.json();
                 let results = [];
+                
                 if (data.results) results = data.results;
+                else if (data.docs) results = data.docs;
                 else if (data.entries) results = data.entries;
+                else if (data.books) results = data.books;
                 
                 if (results.length === 0) {
-                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books found. Try a different search.</div>';
+                    resultsDiv.innerHTML = '<div class="loading">No books found. Try a different search.</div>';
                     return;
                 }
                 
@@ -537,6 +567,7 @@
                 const categoryKeywords = categories[currentCategory] || [];
                 
                 for (const book of results.slice(0, 10)) {
+                    // Apply category filter
                     if (currentCategory !== 'all' && categoryKeywords.length > 0) {
                         const titleLower = (book.title || '').toLowerCase();
                         const matchesCategory = categoryKeywords.some(keyword => titleLower.includes(keyword));
@@ -545,12 +576,17 @@
                     
                     count++;
                     const title = book.title || 'Unknown Title';
-                    const author = book.authors ? (book.authors[0]?.name || book.authors[0] || 'Unknown') : 'Unknown';
+                    let author = 'Unknown';
                     
-                    let downloadUrl = '';
-                    if (currentSource === 'gutenberg') {
-                        downloadUrl = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
+                    if (book.authors) {
+                        author = book.authors[0]?.name || book.authors[0] || 'Unknown';
+                    } else if (book.author_name) {
+                        author = book.author_name[0] || 'Unknown';
+                    } else if (book.author) {
+                        author = book.author || 'Unknown';
                     }
+                    
+                    const downloadUrl = source.getDownloadUrl(book);
                     
                     if (downloadUrl) {
                         resultsDiv.innerHTML += `
@@ -558,7 +594,7 @@
                                 <div class="book-info">
                                     <div class="book-title">${title}</div>
                                     <div class="book-author">${author}</div>
-                                    <div class="book-type">${sources[currentSource].name}</div>
+                                    <div class="book-type">${source.name}</div>
                                 </div>
                                 <button class="btn btn-success" onclick="downloadBook('${downloadUrl}', '${title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button>
                             </div>
@@ -567,34 +603,37 @@
                 }
                 
                 if (count === 0) {
-                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books available for download. Try Project Gutenberg source or different search.</div>';
+                    resultsDiv.innerHTML = '<div class="loading">No books available for download. Try Project Gutenberg source or different search.</div>';
+                } else if (count < results.slice(0, 10).length) {
+                    resultsDiv.innerHTML += '<div style="text-align:center; padding:10px; color:#666; font-size:14px;">Some books may not be available in text format</div>';
                 }
                 
             } catch (err) {
                 console.error('Search error:', err);
-                resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Error searching. Please check your internet connection.</div>';
+                resultsDiv.innerHTML = '<div class="loading" style="color:#ef4444;">Error searching. Please check your internet connection.<br><small>' + err.message + '</small></div>';
             }
         }
 
         async function downloadBook(url, title, author) {
             if (!url || url.trim() === '') {
-                alert('Sorry, this book is not available in plain text format.\n\n💡 Tip: Use Project Gutenberg source for best results.');
+                alert('Sorry, this book is not available in plain text format.\n\n Tip: Use Project Gutenberg source for best results.');
                 return;
             }
             
             alert('Downloading: ' + title + '\n\nPlease wait...');
             
             try {
+                console.log('Downloading from:', url);
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Download failed');
+                    throw new Error('Download failed: ' + response.status);
                 }
                 
                 const text = await response.text();
                 
                 if (!text || text.trim().length < 50) {
-                    throw new Error('Downloaded file is empty');
+                    throw new Error('Downloaded file is empty or invalid');
                 }
                 
                 const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
@@ -617,7 +656,7 @@
                 
             } catch (err) {
                 console.error('Download error:', err);
-                alert('Download failed: ' + err.message + '\n\nTry using Project Gutenberg source instead.');
+                alert('Download failed: ' + err.message + '\n\nTry using Project Gutenberg source instead or a different book.');
             }
         }
 
@@ -788,7 +827,7 @@
             if (isPaused) {
                 synth.resume();
                 isPaused = false;
-                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+                document.getElementById('pause-btn').innerText = '️ Pause';
             } else {
                 synth.pause();
                 isPaused = true;
@@ -862,6 +901,7 @@
             document.body.style.fontFamily = font;
         }
 
+        // Initialize app
         init();
     </script>
 </body>
