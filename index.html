@@ -11,45 +11,49 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Georgia,serif;font-size:18px;line-height:1.6;padding:20px;padding-bottom:100px;background:#fff;color:#000}
-h1{color:#2563eb;margin-bottom:20px;font-size:1.8em}
-h2{color:#2563eb;margin:20px 0 10px 0;font-size:1.3em}
-.btn{background:#2563eb;color:white;border:none;padding:15px;border-radius:12px;font-size:16px;font-weight:bold;margin:5px 0;width:100%;cursor:pointer}
-.btn:active{opacity:0.9}
-.btn-secondary{background:#f3f4f6;color:#000;border:2px solid #2563eb}
-.btn-danger{background:#ef4444}
-.btn-success{background:#10b981}
-.book-card{background:#f3f4f6;border-radius:12px;padding:15px;margin:10px 0;display:flex;justify-content:space-between;align-items:center}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;font-size:18px;line-height:1.6;padding:20px;padding-bottom:100px;background:#f8f9fa;color:#212529}
+h1{color:#2563eb;margin-bottom:20px;font-size:2em;font-weight:700}
+h2{color:#495057;margin:20px 0 10px 0;font-size:1.2em;font-weight:600}
+.btn{background:#2563eb;color:white;border:none;padding:15px;border-radius:10px;font-size:16px;font-weight:600;margin:5px 0;width:100%;cursor:pointer;transition:all 0.3s}
+.btn:active{opacity:0.9;transform:scale(0.98)}
+.btn-secondary{background:#e9ecef;color:#212529;border:2px solid #dee2e6}
+.btn-danger{background:#dc3545}
+.btn-success{background:#28a745}
+.book-card{background:white;border-radius:12px;padding:15px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.2s}
+.book-card:active{transform:scale(0.98)}
 .book-info{flex-grow:1;cursor:pointer;padding:10px}
-.book-title{font-weight:bold;font-size:1.1em;margin-bottom:5px}
-.book-author{font-size:0.9em;color:#666}
-.book-type{font-size:0.8em;color:#2563eb;font-weight:bold;margin-top:5px}
-input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;border-radius:12px;font-size:16px;margin:10px 0}
+.book-title{font-weight:600;font-size:1.1em;margin-bottom:5px;color:#212529}
+.book-author{font-size:0.9em;color:#6c757d}
+.book-type{font-size:0.8em;color:#2563eb;font-weight:600;margin-top:5px}
+input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;border-radius:10px;font-size:16px;margin:10px 0;background:white}
 #reader{position:fixed;top:0;left:0;right:0;bottom:0;background:white;z-index:100;display:none;flex-direction:column;padding:15px}
 #reader-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #2563eb}
 #reader-content{flex-grow:1;overflow-y:auto;padding:10px;font-size:18px}
-#reader-text-wrapper p,#reader-text-wrapper h1,#reader-text-wrapper h2,#reader-text-wrapper h3{margin:10px 0}
-#reader-content .speaking{background-color:#fde047;font-weight:bold}
-#reader-controls{display:flex;gap:10px;padding:15px 0;border-top:2px solid #2563eb}
+#reader-text-wrapper p,#reader-text-wrapper h1,#reader-text-wrapper h2,#reader-text-wrapper h3{margin:10px 0;line-height:1.8}
+#reader-content .speaking{background-color:#fff3cd;font-weight:bold}
+#reader-controls{display:flex;gap:10px;padding:15px 0;border-top:2px solid #dee2e6}
 #reader-controls .btn{flex:1}
-.nav{position:fixed;bottom:0;left:0;right:0;background:#f3f4f6;display:flex;justify-content:space-around;padding:15px;box-shadow:0 -2px 10px rgba(0,0,0,0.1);z-index:50}
-.nav button{background:none;border:none;font-size:14px;cursor:pointer;padding:5px;flex:1}
-.nav button.active{color:#2563eb;font-weight:bold;border-bottom:3px solid #2563eb}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:15px;box-shadow:0 -2px 10px rgba(0,0,0,0.1);z-index:50;border-top:1px solid #dee2e6}
+.nav button{background:none;border:none;font-size:14px;cursor:pointer;padding:5px;flex:1;color:#6c757d;transition:all 0.3s}
+.nav button.active{color:#2563eb;font-weight:600;border-bottom:3px solid #2563eb}
 #file-input{display:none}
-.upload-area{background:#e0e7ff;border:3px dashed #2563eb;border-radius:12px;padding:30px;text-align:center;margin:15px 0;cursor:pointer}
+.upload-area{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:15px;padding:40px 20px;text-align:center;margin:15px 0;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:transform 0.3s}
+.upload-area:active{transform:scale(0.98)}
 .section{display:none}
 .section.active{display:block}
-.folder-card{background:#e0e7ff;border-radius:12px;padding:15px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.folder-card{background:white;border-radius:12px;padding:15px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer}
 .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;justify-content:center;align-items:center}
-.modal-content{background:white;padding:25px;border-radius:12px;width:90%;max-width:400px}
-.progress-bar{width:100%;height:4px;background:#e5e7eb;border-radius:2px;margin:10px 0}
-.progress-fill{height:100%;background:#2563eb;transition:width 0.3s}
+.modal-content{background:white;padding:25px;border-radius:15px;width:90%;max-width:400px}
+.progress-bar{width:100%;height:4px;background:#e9ecef;border-radius:2px;margin:10px 0}
+.progress-fill{height:100%;background:#2563eb;border-radius:2px;transition:width 0.3s}
 .reader-zoom-controls{display:flex;gap:10px;margin:10px 0}
 .reader-zoom-controls button{flex:1;padding:10px}
 .category-tabs{display:flex;gap:10px;margin:15px 0;flex-wrap:wrap}
-.category-tabs button{flex:1;min-width:100px;padding:10px;font-size:14px}
-.category-tabs button.active{background:#2563eb;color:white}
-.warning{background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;margin:15px 0;border-radius:8px}
+.category-tabs button{flex:1;min-width:100px;padding:12px;font-size:14px;border-radius:8px;border:2px solid #dee2e6;background:white;cursor:pointer;transition:all 0.3s}
+.category-tabs button.active{background:#2563eb;color:white;border-color:#2563eb}
+.warning{background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:15px 0;border-radius:8px}
+.empty-state{text-align:center;padding:40px 20px;color:#6c757d}
+.empty-state-icon{font-size:48px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -57,16 +61,14 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 <div id="library-section" class="section active">
 <h1>📚 ReadEase</h1>
 <div class="upload-area" onclick="document.getElementById('file-input').click()">
-<div style="font-size:48px">📤</div>
-<div style="font-size:18px;font-weight:bold">Tap to Upload Book</div>
-<div style="color:#666">Supports: PDF, EPUB, TXT, HTML</div>
+<div style="font-size:48px;margin-bottom:10px">📤</div>
+<div style="font-size:20px;font-weight:600;color:white">Tap to Upload Book</div>
+<div style="color:rgba(255,255,255,0.9);margin-top:5px">Supports: PDF, EPUB, TXT, HTML</div>
 </div>
 <input type="file" id="file-input" accept=".txt,.pdf,.epub,.html" onchange="handleUpload(event)">
 <h2>My Folders</h2>
 <div id="folders-list"></div>
 <button class="btn btn-secondary" onclick="showCreateFolderModal()">+ Create New Folder</button>
-<h2>Preloaded Books</h2>
-<div id="preloaded-list"></div>
 <h2>My Books</h2>
 <div id="my-books-list"></div>
 <div class="nav">
@@ -77,20 +79,24 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 </div>
 
 <div id="download-section" class="section">
-<h1> Download Free Books</h1>
-<div class="warning"><strong>💡 Tip:</strong> Only <strong>Project Gutenberg</strong> works reliably for downloads.</div>
+<h1>🔍 Download Free Books</h1>
+<div class="warning"><strong>💡 Tip:</strong> Search and download from multiple sources</div>
 <div style="margin:15px 0">
-<label style="display:block;margin-bottom:5px;font-weight:bold">Choose Source:</label>
-<select id="source-select"><option value="gutenberg">⭐ Project Gutenberg (70,000+ FREE books)</option></select>
+<label style="display:block;margin-bottom:5px;font-weight:600">Choose Source:</label>
+<select id="source-select" onchange="changeSource()">
+<option value="gutenberg">⭐ Project Gutenberg (70,000+ FREE)</option>
+<option value="standardebooks">📖 Standard Ebooks (Quality)</option>
+<option value="openlibrary">📚 Open Library (1.7M books)</option>
+</select>
 </div>
 <div class="category-tabs">
 <button class="btn btn-secondary active" onclick="setCategory('all',this)">All</button>
-<button class="btn btn-secondary" onclick="setCategory('children',this)"> Children</button>
-<button class="btn btn-secondary" onclick="setCategory('classics',this)"> Classics</button>
-<button class="btn btn-secondary" onclick="setCategory('fiction',this)"> Fiction</button>
+<button class="btn btn-secondary" onclick="setCategory('children',this)">👶 Children</button>
+<button class="btn btn-secondary" onclick="setCategory('classics',this)">📖 Classics</button>
+<button class="btn btn-secondary" onclick="setCategory('fiction',this)">📚 Fiction</button>
 <button class="btn btn-secondary" onclick="setCategory('adventure',this)">⚔️ Adventure</button>
 </div>
-<input type="text" id="search-box" placeholder="Search (e.g., Alice, Peter Pan, Sherlock)..." onkeypress="if(event.key==='Enter')searchBooks()">
+<input type="text" id="search-box" placeholder="Search for books..." onkeypress="if(event.key==='Enter')searchBooks()">
 <button class="btn" onclick="searchBooks()">🔍 Search</button>
 <div id="search-results"></div>
 <div class="nav">
@@ -101,7 +107,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 </div>
 
 <div id="settings-section" class="section">
-<h1>️ Settings</h1>
+<h1>⚙️ Settings</h1>
 <h2>Font Size: <span id="size-val">18</span>px</h2>
 <input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%;height:40px;margin:15px 0">
 <h2 style="margin-top:30px">Theme</h2>
@@ -115,7 +121,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 <button class="btn btn-secondary" onclick="setFont('Comic Sans MS, cursive')">Kids/Dyslexia</button>
 <h2 style="margin-top:30px">Voice Speed</h2>
 <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="ttsRate=this.value;document.getElementById('rate-val').innerText=this.value" style="width:100%;height:40px;margin:15px 0">
-<div style="text-align:center;color:#666">Speed: <span id="rate-val">0.9</span>x</div>
+<div style="text-align:center;color:#6c757d">Speed: <span id="rate-val">0.9</span>x</div>
 <div class="nav">
 <button onclick="showSection('library',this)">📚 Library</button>
 <button onclick="showSection('download',this)"> Download</button>
@@ -132,15 +138,15 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 <div class="progress-bar"><div class="progress-fill" id="reading-progress" style="width:0%"></div></div>
 <div class="reader-zoom-controls">
 <button class="btn btn-secondary" onclick="zoomIn()">🔍+</button>
-<button class="btn btn-secondary" onclick="zoomOut()">-</button>
-<button class="btn btn-secondary" onclick="saveProgress()"> Save</button>
+<button class="btn btn-secondary" onclick="zoomOut()">🔍-</button>
+<button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
 </div>
 <div id="reader-content">
 <div id="reader-text-wrapper"></div>
 </div>
 <div id="reader-controls">
 <button class="btn" id="read-btn" onclick="toggleRead()">▶️ Read</button>
-<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">️ Pause</button>
+<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">⏸️ Pause</button>
 <button class="btn btn-secondary" onclick="stopRead()">⏹️ Stop</button>
 </div>
 </div>
@@ -168,7 +174,7 @@ db.version(1).stores({
 // Global variables
 let books=[],folders=[],currentBook=null,currentFolder=null;
 let isSpeaking=false,isPaused=false,speechQueue=[],currentSpeechIndex=0;
-let readerFontSize=18,ttsRate=0.9,currentCategory='all';
+let readerFontSize=18,ttsRate=0.9,currentCategory='all',currentSource='gutenberg';
 const synth=window.speechSynthesis;
 let currentUtterance=null;
 
@@ -181,22 +187,37 @@ const categories={
   adventure:['adventure','treasure','island','journey','expedition','huckleberry','finn','robinson','crusoe','swiss','family']
 };
 
-// Preloaded books
-const preloadedBooks=[
-  {title:'Alice in Wonderland',author:'Lewis Carroll',type:'TXT',content:'<h2>Chapter 1</h2><p>Alice was beginning to get very tired of sitting by her sister on the bank.</p><p>Suddenly a White Rabbit with pink eyes ran close by her.</p>'},
-  {title:"Aesop's Fables",author:'Aesop',type:'TXT',content:'<h2>The Tortoise and the Hare</h2><p>A Hare was making fun of the Tortoise for being so slow.</p><p>"I will run you a race," said the Tortoise.</p>'}
-];
+// Download sources
+const sources={
+  gutenberg:{
+    name:'Project Gutenberg',
+    searchUrl:(q)=>'https://gutendex.com/books?search='+encodeURIComponent(q),
+    getUrl:(book)=>book.formats['text/plain; charset=utf-8']||book.formats['text/plain']
+  },
+  standardebooks:{
+    name:'Standard Ebooks',
+    searchUrl:(q)=>'https://standardebooks.org/opds/search/'+encodeURIComponent(q),
+    getUrl:(book)=>{
+      const links=book.links||[];
+      const epub=links.find(l=>l.type==='application/epub+zip');
+      return epub?epub.href:null;
+    }
+  },
+  openlibrary:{
+    name:'Open Library',
+    searchUrl:(q)=>'https://openlibrary.org/search.json?q='+encodeURIComponent(q)+'&limit=10',
+    getUrl:(book)=>book.key?'https://openlibrary.org'+book.key+'.txt':null
+  }
+};
 
 // Initialize app
 async function init(){
   try{
     await loadFolders();
     await loadBooks();
-    renderPreloaded();
     console.log('App initialized successfully');
   }catch(err){
     console.error('Initialization error:',err);
-    alert('Error initializing app: '+err.message);
   }
 }
 
@@ -226,7 +247,7 @@ function renderFolders(){
   if(!c)return;
   
   if(folders.length===0){
-    c.innerHTML='<p style="color:#666;padding:10px">No folders yet</p>';
+    c.innerHTML='<p style="color:#6c757d;padding:10px">No folders yet</p>';
     return;
   }
   
@@ -236,26 +257,11 @@ function renderFolders(){
     const div=document.createElement('div');
     div.className='folder-card';
     div.onclick=function(){openFolder(f.name)};
-    div.innerHTML='<div><div style="font-weight:bold"> '+f.name+'</div><div style="font-size:0.9em;color:#666">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
+    div.innerHTML='<div><div style="font-weight:600">📁 '+f.name+'</div><div style="font-size:0.9em;color:#6c757d">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
     div.querySelector('button').onclick=function(e){
       e.stopPropagation();
       deleteFolder(i,e);
     };
-    c.appendChild(div);
-  });
-}
-
-// Render preloaded books
-function renderPreloaded(){
-  const c=document.getElementById('preloaded-list');
-  if(!c)return;
-  
-  c.innerHTML='';
-  preloadedBooks.forEach((b,i)=>{
-    const div=document.createElement('div');
-    div.className='book-card';
-    div.onclick=function(){openPreloadedBook(i)};
-    div.innerHTML='<div class="book-info"><div class="book-title">'+b.title+'</div><div class="book-author">'+b.author+'</div><div class="book-type">'+b.type+'</div></div>';
     c.appendChild(div);
   });
 }
@@ -268,7 +274,7 @@ async function renderMyBooks(){
   const displayBooks=currentFolder?books.filter(b=>b.folder===currentFolder):books;
   
   if(displayBooks.length===0){
-    c.innerHTML='<p style="color:#666;padding:20px;text-align:center">No books yet. Upload or download!</p>';
+    c.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>No books yet.<br>Upload or download some!</p></div>';
     return;
   }
   
@@ -280,7 +286,7 @@ async function renderMyBooks(){
     const infoDiv=document.createElement('div');
     infoDiv.className='book-info';
     infoDiv.onclick=function(){openBook(b.id,false)};
-    infoDiv.innerHTML='<div class="book-title">'+b.title+'</div><div class="book-author">'+b.author+'</div><div class="book-type">'+b.type+'</div>'+(b.progress?'<div style="font-size:0.8em;color:#10b981">📖 '+b.progress+'%</div>':'');
+    infoDiv.innerHTML='<div class="book-title">'+b.title+'</div><div class="book-author">'+b.author+'</div><div class="book-type">'+b.type+'</div>'+(b.progress?'<div style="font-size:0.8em;color:#28a745">📖 '+b.progress+'%</div>':'');
     
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
@@ -311,6 +317,11 @@ function showSection(name,btn){
     currentFolder=null;
     renderMyBooks();
   }
+}
+
+// Change source
+function changeSource(){
+  currentSource=document.getElementById('source-select').value;
 }
 
 // Set category
@@ -367,15 +378,12 @@ async function deleteFolder(i,e){
   
   try{
     const name=folders[i].name;
-    // Remove folder from books
     for(const book of books){
       if(book.folder===name){
         book.folder=null;
         await db.books.update(book.id,{folder:null});
       }
     }
-    
-    // Delete folder
     await db.folders.delete(folders[i].id);
     await loadFolders();
     await loadBooks();
@@ -473,15 +481,21 @@ async function searchBooks(){
   const resultsDiv=document.getElementById('search-results');
   if(!resultsDiv)return;
   
-  resultsDiv.innerHTML='<div style="text-align:center;padding:20px">🔍 Searching Project Gutenberg...</div>';
+  resultsDiv.innerHTML='<div style="text-align:center;padding:20px">🔍 Searching '+sources[currentSource].name+'...</div>';
   
   try{
-    const res=await fetch('https://gutendex.com/books?search='+encodeURIComponent(q));
+    const source=sources[currentSource];
+    const url=source.searchUrl(q);
+    const res=await fetch(url);
     const data=await res.json();
-    const results=data.results||[];
+    
+    let results=[];
+    if(data.results)results=data.results;
+    else if(data.docs)results=data.docs;
+    else if(data.entries)results=data.entries;
     
     if(results.length===0){
-      resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#666">No books found. Try different search terms like "Alice", "Sherlock", "Peter Pan"</div>';
+      resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#6c757d">No books found. Try different search.</div>';
       return;
     }
     
@@ -490,26 +504,25 @@ async function searchBooks(){
     const keywords=categories[currentCategory]||[];
     
     for(const book of results.slice(0,15)){
-      // Apply category filter
       if(currentCategory!=='all'&&keywords.length>0){
         const title=(book.title||'').toLowerCase();
-        const author=(book.authors&&book.authors[0]?book.authors[0].name||'':'').toLowerCase();
-        const matchesCategory=keywords.some(k=>title.includes(k)||author.includes(k));
+        const authorName=book.authors?book.authors[0]?.name||'':book.author_name?book.author_name[0]||'':'';
+        const matchesCategory=keywords.some(k=>title.includes(k)||authorName.toLowerCase().includes(k));
         if(!matchesCategory)continue;
       }
       
-      const url=book.formats['text/plain; charset=utf-8']||book.formats['text/plain'];
+      const url=source.getUrl(book);
       if(!url)continue;
       
       count++;
-      const author=book.authors&&book.authors[0]?book.authors[0].name||'Unknown':'Unknown';
+      const author=book.authors?book.authors[0]?.name||'Unknown':book.author_name?book.author_name[0]||'Unknown':'Unknown';
       
       const div=document.createElement('div');
       div.className='book-card';
       
       const infoDiv=document.createElement('div');
       infoDiv.className='book-info';
-      infoDiv.innerHTML='<div class="book-title">'+book.title+'</div><div class="book-author">'+author+'</div><div class="book-type">Project Gutenberg</div>';
+      infoDiv.innerHTML='<div class="book-title">'+book.title+'</div><div class="book-author">'+author+'</div><div class="book-type">'+source.name+'</div>';
       
       const downloadBtn=document.createElement('button');
       downloadBtn.className='btn btn-success';
@@ -524,15 +537,15 @@ async function searchBooks(){
     }
     
     if(count===0){
-      resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#666">No books with text format found in this category.<br><br>Try "All" category or search for classic titles like:<br>• Alice in Wonderland<br>• Peter Pan<br>• Sherlock Holmes<br>• Aesop\'s Fables</div>';
+      resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#6c757d">No books with text format found. Try different search or source.</div>';
     }
   }catch(err){
     console.error('Search error:',err);
-    resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#ef4444">Error searching. Check internet connection.</div>';
+    resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:#dc3545">Error searching. Check internet connection.</div>';
   }
 }
 
-// Download book using CORS proxy
+// Download book
 async function downloadBook(url,title,author){
   if(!url){
     alert('No text format available');
@@ -542,9 +555,26 @@ async function downloadBook(url,title,author){
   alert('Downloading: '+title+'\nPlease wait...');
   
   try{
-    // Use CORS proxy to bypass Gutenberg restrictions
-    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
-    const response=await fetch(proxyUrl);
+    // Try direct fetch first
+    let response;
+    try{
+      response=await fetch(url,{
+        headers:{
+          'Accept':'text/plain',
+          'User-Agent':'ReadEase/1.0'
+        }
+      });
+    }catch(directError){
+      console.log('Direct fetch failed, trying proxy...');
+      
+      // If direct fails, try proxy with timeout
+      const controller=new AbortController();
+      const timeoutId=setTimeout(()=>controller.abort(),10000);
+      
+      const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
+      response=await fetch(proxyUrl,{signal:controller.signal});
+      clearTimeout(timeoutId);
+    }
     
     if(!response.ok){
       throw new Error('Download failed: '+response.status);
@@ -572,34 +602,21 @@ async function downloadBook(url,title,author){
     await db.books.add(book);
     await loadBooks();
     alert('✅ Downloaded! Check Library.');
+    
   }catch(err){
-    alert('Download failed: '+err.message+'\n\nTry searching for a different book.');
+    alert('Download failed: '+err.message+'\n\nTry searching for a different book or check your internet connection.');
     console.error('Download error:',err);
-  }
-}
-
-// Open preloaded book
-async function openPreloadedBook(i){
-  if(i>=0&&i<preloadedBooks.length){
-    currentBook={...preloadedBooks[i],id:'pre_'+i};
-    await openReader();
   }
 }
 
 // Open book from database
 async function openBook(id,isPre){
   try{
-    if(isPre){
-      currentBook=preloadedBooks.find(b=>b.id===id);
-    }else{
-      currentBook=await db.books.get(id);
-    }
-    
+    currentBook=await db.books.get(id);
     if(!currentBook){
       alert('Book not found');
       return;
     }
-    
     await openReader();
   }catch(err){
     alert('Error opening book: '+err.message);
@@ -669,7 +686,7 @@ function zoomOut(){
 
 // Delete current book
 async function deleteBook(){
-  if(!currentBook||!currentBook.id||currentBook.id.startsWith('pre_')){
+  if(!currentBook||!currentBook.id){
     alert('Cannot delete');
     return;
   }
@@ -746,10 +763,8 @@ function speakNextChunk(){
   
   const text=speechQueue[currentSpeechIndex];
   
-  // Remove speaking class from all paragraphs
   document.querySelectorAll('.speaking').forEach(el=>el.classList.remove('speaking'));
   
-  // Add speaking class to current paragraph
   const paragraphs=document.querySelectorAll('#reader-text-wrapper p');
   if(paragraphs[currentSpeechIndex]){
     paragraphs[currentSpeechIndex].classList.add('speaking');
@@ -805,7 +820,7 @@ function stopRead(){
 
 // Save reading progress
 async function saveProgress(){
-  if(!currentBook||!currentBook.id||currentBook.id.startsWith('pre_'))return;
+  if(!currentBook||!currentBook.id)return;
   
   try{
     const c=document.getElementById('reader-content');
@@ -859,8 +874,8 @@ function setTheme(t){
     document.body.style.background='#000';
     document.body.style.color='#ff0';
   }else{
-    document.body.style.background='#fff';
-    document.body.style.color='#000';
+    document.body.style.background='#f8f9fa';
+    document.body.style.color='#212529';
   }
 }
 
