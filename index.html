@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>ReadEase</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="https://cdn.fbsbx.com/v/t65.102178-21/786352729_999207496464046_4271226627932746885_n.jpg/readease_512x512.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -14,7 +17,7 @@
         body { font-family: Georgia, serif; font-size: 18px; line-height: 1.6; padding: 20px; padding-bottom: 100px; background: #fff; color: #000; touch-action: manipulation; }
         h1 { color: #2563eb; margin-bottom: 20px; font-size: 1.8em; }
         h2 { color: #2563eb; margin: 20px 0 10px 0; font-size: 1.3em; }
-        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; touch-action: manipulation; }
+        .btn { background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; margin: 5px 0; width: 100%; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; }
         .btn:active { opacity: 0.9; transform: scale(0.98); }
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
@@ -24,7 +27,7 @@
         .book-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .book-author { font-size: 0.9em; color: #666; }
         .book-type { font-size: 0.8em; color: #2563eb; font-weight: bold; margin-top: 5px; }
-        input[type="text"], select { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; }
+        input[type="text"], select { width: 100%; padding: 15px; border: 2px solid #2563eb; border-radius: 12px; font-size: 16px; margin: 10px 0; -webkit-appearance: none; }
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
         #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; -webkit-overflow-scrolling: touch; }
@@ -55,12 +58,17 @@
         .tap-zone-left { left: 0; }
         .tap-zone-right { right: 0; }
         .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 8px; }
+        @media (max-width: 600px) {
+            body { font-size: 16px; }
+            .btn { padding: 15px; font-size: 16px; }
+            h1 { font-size: 1.5em; }
+        }
     </style>
 </head>
 <body>
 
     <div id="library-section" class="section active">
-        <h1> ReadEase</h1>
+        <h1>📚 ReadEase</h1>
         <div class="upload-area" onclick="document.getElementById('file-input').click()">
             <div style="font-size: 48px;">📤</div>
             <div style="font-size: 18px; font-weight: bold;">Tap to Upload Book</div>
@@ -81,15 +89,15 @@
         <div class="nav">
             <button class="active" onclick="showSection('library', this)">📚 Library</button>
             <button onclick="showSection('download', this)">🔍 Download</button>
-            <button onclick="showSection('settings', this)">⚙️ Settings</button>
+            <button onclick="showSection('settings', this)">️ Settings</button>
         </div>
     </div>
 
     <div id="download-section" class="section">
-        <h1>🔍 Download Free Books</h1>
+        <h1> Download Free Books</h1>
         
         <div class="warning">
-            <strong>💡 Tip:</strong> Only <strong>Project Gutenberg</strong> works reliably for downloads. Other sources may not have text format available.
+            <strong> Tip:</strong> Only <strong>Project Gutenberg</strong> works reliably for downloads. Other sources may not have text format available.
         </div>
         
         <div style="margin: 15px 0;">
@@ -103,12 +111,12 @@
             <button class="btn btn-secondary active" onclick="setCategory('all', this)">All</button>
             <button class="btn btn-secondary" onclick="setCategory('children', this)">👶 Children</button>
             <button class="btn btn-secondary" onclick="setCategory('classics', this)">📖 Classics</button>
-            <button class="btn btn-secondary" onclick="setCategory('fiction', this)">📚 Fiction</button>
-            <button class="btn btn-secondary" onclick="setCategory('adventure', this)">️ Adventure</button>
+            <button class="btn btn-secondary" onclick="setCategory('fiction', this)"> Fiction</button>
+            <button class="btn btn-secondary" onclick="setCategory('adventure', this)">⚔️ Adventure</button>
         </div>
         
         <input type="text" id="search-box" placeholder="Search (e.g., Alice, Peter Pan, Sherlock)..." onkeypress="if(event.key==='Enter') searchBooks()">
-        <button class="btn" onclick="searchBooks()"> Search</button>
+        <button class="btn" onclick="searchBooks()">🔍 Search</button>
         <div id="search-results"></div>
         
         <div class="nav">
@@ -140,7 +148,7 @@
         <div style="text-align: center; color: #666;">Speed: <span id="rate-val">0.9</span>x</div>
         
         <div class="nav">
-            <button onclick="showSection('library', this)"> Library</button>
+            <button onclick="showSection('library', this)">📚 Library</button>
             <button onclick="showSection('download', this)">🔍 Download</button>
             <button class="active" onclick="showSection('settings', this)">⚙️ Settings</button>
         </div>
@@ -245,7 +253,7 @@
             if (displayBooks.length === 0) { c.innerHTML = '<p style="color:#666; padding:20px; text-align:center;">No books yet. Upload or download!</p>'; return; }
             c.innerHTML = '';
             displayBooks.forEach(b => {
-                c.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook(b.id,false)"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><div class="book-type">${b.type}</div>${b.progress?`<div style="font-size:0.8em;color:#10b981;">📖 ${b.progress}%</div>`:''}</div><button class="btn btn-danger" onclick="deleteBookFromDB(b.id,event)" style="width:auto;padding:10px;">🗑️</button></div>`;
+                c.innerHTML += `<div class="book-card"><div class="book-info" onclick="openBook(b.id,false)"><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><div class="book-type">${b.type}</div>${b.progress?`<div style="font-size:0.8em;color:#10b981;">📖 ${b.progress}%</div>`:''}</div><button class="btn btn-danger" onclick="deleteBookFromDB(b.id,event)" style="width:auto;padding:10px;">️</button></div>`;
             });
         }
 
