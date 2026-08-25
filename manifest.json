@@ -1,63 +1,211 @@
-// Download book with direct fetch and fallback
-async function downloadBook(url, title, author) {
-  if (!url) {
-    alert('No text format available');
+// Pre-loaded book database with direct Gutenberg URLs
+const preloadedBooksDB = [
+  {
+    title: "Alice's Adventures in Wonderland",
+    author: "Lewis Carroll",
+    category: "children",
+    url: "https://www.gutenberg.org/files/11/11-0.txt"
+  },
+  {
+    title: "Peter Pan",
+    author: "J.M. Barrie",
+    category: "children",
+    url: "https://www.gutenberg.org/files/16/16-0.txt"
+  },
+  {
+    title: "The Wizard of Oz",
+    author: "L. Frank Baum",
+    category: "children",
+    url: "https://www.gutenberg.org/files/55/55-0.txt"
+  },
+  {
+    title: "Aesop's Fables",
+    author: "Aesop",
+    category: "children",
+    url: "https://www.gutenberg.org/files/19994/19994-0.txt"
+  },
+  {
+    title: "Grimm's Fairy Tales",
+    author: "Brothers Grimm",
+    category: "children",
+    url: "https://www.gutenberg.org/files/2591/2591-0.txt"
+  },
+  {
+    title: "Sherlock Holmes",
+    author: "Arthur Conan Doyle",
+    category: "classics",
+    url: "https://www.gutenberg.org/files/1661/1661-0.txt"
+  },
+  {
+    title: "Dracula",
+    author: "Bram Stoker",
+    category: "classics",
+    url: "https://www.gutenberg.org/files/345/345-0.txt"
+  },
+  {
+    title: "Frankenstein",
+    author: "Mary Shelley",
+    category: "classics",
+    url: "https://www.gutenberg.org/files/84/84-0.txt"
+  },
+  {
+    title: "Pride and Prejudice",
+    author: "Jane Austen",
+    category: "classics",
+    url: "https://www.gutenberg.org/files/1342/1342-0.txt"
+  },
+  {
+    title: "Treasure Island",
+    author: "Robert Louis Stevenson",
+    category: "adventure",
+    url: "https://www.gutenberg.org/files/120/120-0.txt"
+  },
+  {
+    title: "Robinson Crusoe",
+    author: "Daniel Defoe",
+    category: "adventure",
+    url: "https://www.gutenberg.org/files/521/521-0.txt"
+  },
+  {
+    title: "The Adventures of Huckleberry Finn",
+    author: "Mark Twain",
+    category: "adventure",
+    url: "https://www.gutenberg.org/files/76/76-0.txt"
+  }
+];
+
+// Modified search function to use pre-loaded database when API fails
+async function searchBooks() {
+  const input = document.getElementById('search-box');
+  if (!input) return;
+  
+  const q = input.value.trim().toLowerCase();
+  if (!q) {
+    alert('Enter search term');
     return;
   }
   
-  alert('Downloading: ' + title + '\nPlease wait...');
+  const resultsDiv = document.getElementById('search-results');
+  if (!resultsDiv) return;
+  
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px">🔍 Searching...</div>';
   
   try {
-    // Try direct fetch first (sometimes works on mobile)
-    let response;
-    try {
-      response = await fetch(url, {
-        headers: {
-          'Accept': 'text/plain',
-          'User-Agent': 'ReadEase/1.0'
-        }
+    // First try the API
+    const res = await fetch('https://gutendex.com/books?search=' + encodeURIComponent(q));
+    const data = await res.json();
+    const apiResults = data.results || [];
+    
+    // Filter API results by category
+    let filteredResults = [];
+    const keywords = categories[currentCategory] || [];
+    
+    for (const book of apiResults.slice(0, 10)) {
+      if (currentCategory !== 'all' && keywords.length > 0) {
+        const title = (book.title || '').toLowerCase();
+        const author = (book.authors && book.authors[0] ? book.authors[0].name || '' : '').toLowerCase();
+        const matchesCategory = keywords.some(k => title.includes(k) || author.includes(k));
+        if (!matchesCategory) continue;
+      }
+      
+      const url = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
+      if (!url) continue;
+      
+      filteredResults.push({
+        title: book.title,
+        author: book.authors && book.authors[0] ? book.authors[0].name || 'Unknown' : 'Unknown',
+        url: url,
+        source: 'api'
       });
-    } catch (directError) {
-      console.log('Direct fetch failed, trying proxy...');
+    }
+    
+    // If API failed or no results, use pre-loaded database
+    if (filteredResults.length === 0) {
+      console.log('API failed or no results, using pre-loaded database');
       
-      // If direct fails, try proxy with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Search pre-loaded database
+      const dbResults = preloadedBooksDB.filter(book => {
+        const matchesSearch = book.title.toLowerCase().includes(q) || 
+                             book.author.toLowerCase().includes(q);
+        const matchesCategory = currentCategory === 'all' || book.category === currentCategory;
+        return matchesSearch && matchesCategory;
+      });
       
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-      response = await fetch(proxyUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
+      filteredResults = dbResults.map(book => ({
+        title: book.title,
+        author: book.author,
+        url: book.url,
+        source: 'preloaded'
+      }));
     }
     
-    if (!response.ok) {
-      throw new Error('Download failed: ' + response.status);
+    // Display results
+    if (filteredResults.length === 0) {
+      resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666">No books found. Try different search terms.</div>';
+      return;
     }
     
-    const text = await response.text();
-    
-    if (text.length < 50) {
-      throw new Error('Empty file');
-    }
-    
-    const content = text.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
-    
-    const book = {
-      title: title,
-      author: author,
-      type: 'TXT',
-      content: content,
-      cover: '',
-      progress: 0,
-      folder: currentFolder || null,
-      timestamp: Date.now()
-    };
-    
-    await db.books.add(book);
-    await loadBooks();
-    alert('✅ Downloaded! Check Library.');
+    resultsDiv.innerHTML = '';
+    filteredResults.forEach(book => {
+      const div = document.createElement('div');
+      div.className = 'book-card';
+      
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'book-info';
+      infoDiv.innerHTML = '<div class="book-title">' + book.title + '</div><div class="book-author">' + book.author + '</div><div class="book-type">Project Gutenberg</div>';
+      
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'btn btn-success';
+      downloadBtn.innerText = 'Download';
+      downloadBtn.onclick = function() {
+        downloadBook(book.url, book.title, book.author);
+      };
+      
+      div.appendChild(infoDiv);
+      div.appendChild(downloadBtn);
+      resultsDiv.appendChild(div);
+    });
     
   } catch (err) {
-    alert('Download failed: ' + err.message + '\n\nTry searching for a different book or check your internet connection.');
-    console.error('Download error:', err);
+    console.error('Search error:', err);
+    
+    // Fallback to pre-loaded database
+    const dbResults = preloadedBooksDB.filter(book => {
+      const matchesSearch = book.title.toLowerCase().includes(q) || 
+                           book.author.toLowerCase().includes(q);
+      const matchesCategory = currentCategory === 'all' || book.category === currentCategory;
+      return matchesSearch && matchesCategory;
+    });
+    
+    if (dbResults.length === 0) {
+      resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444">Error searching. Showing pre-loaded books instead.</div>';
+      
+      // Show all pre-loaded books for current category
+      const allCategoryBooks = preloadedBooksDB.filter(book => 
+        currentCategory === 'all' || book.category === currentCategory
+      );
+      
+      allCategoryBooks.forEach(book => {
+        const div = document.createElement('div');
+        div.className = 'book-card';
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'book-info';
+        infoDiv.innerHTML = '<div class="book-title">' + book.title + '</div><div class="book-author">' + book.author + '</div><div class="book-type">Project Gutenberg</div>';
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn btn-success';
+        downloadBtn.innerText = 'Download';
+        downloadBtn.onclick = function() {
+          downloadBook(book.url, book.title, book.author);
+        };
+        
+        div.appendChild(infoDiv);
+        div.appendChild(downloadBtn);
+        resultsDiv.appendChild(div);
+      });
+    } else {
+      resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444">Error searching. Check internet connection.</div>';
+    }
   }
 }
