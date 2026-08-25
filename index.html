@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Read Ease</title>
+    <title>ReadEase</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
@@ -24,7 +24,6 @@
         .btn-secondary { background: #f3f4f6; color: #000; border: 2px solid #2563eb; }
         .btn-danger { background: #ef4444; }
         .btn-success { background: #10b981; }
-        .btn-warning { background: #f59e0b; }
         
         .book-card { background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
         .book-info { flex-grow: 1; cursor: pointer; padding: 10px; }
@@ -38,7 +37,6 @@
         #reader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; display: none; flex-direction: column; padding: 15px; }
         #reader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #2563eb; }
         #reader-content { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 18px; position: relative; }
-        
         #reader-text-wrapper { position: relative; z-index: 1; }
         #reader-text-wrapper p, #reader-text-wrapper h1, #reader-text-wrapper h2, #reader-text-wrapper h3 { margin: 10px 0; }
         
@@ -90,7 +88,7 @@
 <body>
 
     <div id="library-section" class="section active">
-        <h1>📚 Read Ease</h1>
+        <h1>📚 ReadEase</h1>
         
         <div class="upload-area" onclick="handleUploadClick()">
             <div style="font-size: 48px;">📤</div>
@@ -122,11 +120,8 @@
         <div class="source-selector">
             <label>Choose Source:</label>
             <select id="source-select" onchange="changeSource()">
-                <option value="gutenberg">Project Gutenberg (70,000+ books)</option>
-                <option value="standardebooks">Standard Ebooks (Quality classics)</option>
-                <option value="openlibrary">Open Library (1.7M books)</option>
-                <option value="manybooks">ManyBooks (50,000 books)</option>
-                <option value="children">Children's Books Collection</option>
+                <option value="gutenberg">⭐ Project Gutenberg (Recommended)</option>
+                <option value="standardebooks">Standard Ebooks</option>
             </select>
         </div>
         
@@ -138,7 +133,7 @@
             <button class="btn btn-secondary" onclick="setCategory('adventure', this)">⚔️ Adventure</button>
         </div>
         
-        <input type="text" id="search-box" placeholder="Search for books..." autocomplete="off">
+        <input type="text" id="search-box" placeholder="Search for books (e.g., Alice, Sherlock)..." autocomplete="off">
         <button class="btn" onclick="searchBooks()">Search</button>
         <div id="search-results"></div>
         
@@ -191,7 +186,7 @@
         <div class="reader-zoom-controls">
             <button class="btn btn-secondary" onclick="zoomIn()">🔍+</button>
             <button class="btn btn-secondary" onclick="zoomOut()">🔍-</button>
-            <button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
+            <button class="btn btn-secondary" onclick="saveProgress()"> Save</button>
         </div>
         
         <div id="reader-content">
@@ -243,37 +238,20 @@
         const sources = {
             gutenberg: {
                 name: 'Project Gutenberg',
-                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`,
-                getCoverUrl: (book) => book.formats['image/jpeg'] || `https://covers.openlibrary.org/b/id/${book.cover?.medium || ''}-M.jpg`
+                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`
             },
             standardebooks: {
                 name: 'Standard Ebooks',
-                searchUrl: (query) => `https://standardebooks.org/opds/search/${encodeURIComponent(query)}`,
-                getCoverUrl: (book) => book.cover || ''
-            },
-            openlibrary: {
-                name: 'Open Library',
-                searchUrl: (query) => `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`,
-                getCoverUrl: (book) => `https://covers.openlibrary.org/b/id/${book.cover_i || ''}-M.jpg`
-            },
-            manybooks: {
-                name: 'ManyBooks',
-                searchUrl: (query) => `https://manybooks.net/search?q=${encodeURIComponent(query)}`,
-                getCoverUrl: (book) => book.cover || ''
-            },
-            children: {
-                name: "Children's Books",
-                searchUrl: (query) => `https://gutendex.com/books?search=${encodeURIComponent(query)}`,
-                getCoverUrl: (book) => book.formats['image/jpeg'] || ''
+                searchUrl: (query) => `https://standardebooks.org/opds/search/${encodeURIComponent(query)}`
             }
         };
 
         const categories = {
             all: [],
-            children: ['Alice', 'Peter Pan', 'Winnie', 'Dr. Seuss', 'fairy tale', 'bedtime', 'children'],
-            classics: ['Dickens', 'Austen', 'Twain', 'Shakespeare', 'classic'],
+            children: ['alice', 'peter pan', 'winnie', 'fairy tale', 'children', 'kids'],
+            classics: ['dickens', 'austen', 'twain', 'shakespeare', 'classic'],
             fiction: ['novel', 'fiction', 'story'],
-            adventure: ['adventure', 'treasure', 'journey', 'expedition']
+            adventure: ['adventure', 'treasure', 'journey', 'expedition', 'huckleberry']
         };
 
         const preloadedBooks = [
@@ -340,7 +318,7 @@
             preloadedBooks.forEach((book, index) => {
                 container.innerHTML += `
                     <div class="book-card" onclick="openPreloadedBook(${index})">
-                        <img src="${book.cover}" class="book-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2290%22><rect fill=%22%23ddd%22 width=%2260%22 height=%2290%22/><text fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>📖</text></svg>'">
+                        <img src="${book.cover}" class="book-cover" onerror="this.style.display='none'">
                         <div class="book-info">
                             <div class="book-title">${book.title}</div>
                             <div class="book-author">${book.author}</div>
@@ -363,7 +341,7 @@
             displayBooks.forEach((book) => {
                 container.innerHTML += `
                     <div class="book-card">
-                        <img src="${book.cover || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2290%22><rect fill=%22%23ddd%22 width=%2260%22 height=%2290%22/><text fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>📖</text></svg>'}" class="book-cover" onerror="this.style.display='none'">
+                        <img src="${book.cover || ''}" class="book-cover" onerror="this.style.display='none'">
                         <div class="book-info" onclick="openBook(book.id, false)">
                             <div class="book-title">${book.title}</div>
                             <div class="book-author">${book.author}</div>
@@ -566,15 +544,10 @@
             }
             
             const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px;">🔍 Searching...</div>';
+            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px;"> Searching...</div>';
             
             try {
                 let url = sources[currentSource].searchUrl(query);
-                
-                if (currentCategory !== 'all' && categories[currentCategory]) {
-                    const categoryTerms = categories[currentCategory].join(' OR ');
-                    url += `&term=${encodeURIComponent(categoryTerms)}`;
-                }
                 
                 const response = await fetch(url);
                 
@@ -586,7 +559,6 @@
                 
                 let results = [];
                 if (data.results) results = data.results;
-                else if (data.docs) results = data.docs;
                 else if (data.entries) results = data.entries;
                 
                 if (results.length === 0) {
@@ -597,36 +569,43 @@
                 resultsDiv.innerHTML = '';
                 let count = 0;
                 
+                // Filter by category if selected
+                const categoryKeywords = categories[currentCategory] || [];
+                
                 for (const book of results.slice(0, 10)) {
+                    // Apply category filter
+                    if (currentCategory !== 'all' && categoryKeywords.length > 0) {
+                        const titleLower = (book.title || '').toLowerCase();
+                        const matchesCategory = categoryKeywords.some(keyword => titleLower.includes(keyword));
+                        if (!matchesCategory) continue;
+                    }
+                    
                     count++;
                     const title = book.title || 'Unknown Title';
-                    const author = book.authors ? (book.authors[0]?.name || book.authors[0] || 'Unknown') : (book.author_name ? book.author_name[0] : 'Unknown');
-                    const coverUrl = sources[currentSource].getCoverUrl(book);
+                    const author = book.authors ? (book.authors[0]?.name || book.authors[0] || 'Unknown') : 'Unknown';
                     
+                    // Get download URL for Project Gutenberg
                     let downloadUrl = '';
                     if (currentSource === 'gutenberg') {
                         downloadUrl = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
-                    } else if (currentSource === 'openlibrary') {
-                        downloadUrl = book.key ? `https://openlibrary.org${book.key}.txt` : '';
                     }
                     
-                    if (downloadUrl || currentSource === 'standardebooks' || currentSource === 'manybooks') {
+                    if (downloadUrl) {
                         resultsDiv.innerHTML += `
                             <div class="book-card">
-                                <img src="${coverUrl}" class="book-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2290%22><rect fill=%22%23ddd%22 width=%2260%22 height=%2290%22/><text fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>📖</text></svg>'">
                                 <div class="book-info">
                                     <div class="book-title">${title}</div>
                                     <div class="book-author">${author}</div>
                                     <div class="book-type">${sources[currentSource].name}</div>
                                 </div>
-                                <button class="btn btn-success" onclick="downloadFromSource('${downloadUrl}', '${title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}', '${coverUrl}')">Download</button>
+                                <button class="btn btn-success" onclick="downloadBook('${downloadUrl}', '${title.replace(/'/g, "\\'")}', '${author.replace(/'/g, "\\'")}')">Download</button>
                             </div>
                         `;
                     }
                 }
                 
                 if (count === 0) {
-                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books available for download from this source.</div>';
+                    resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">No books available for download. Try Project Gutenberg source or a different search term.</div>';
                 }
                 
             } catch (err) {
@@ -635,27 +614,25 @@
             }
         }
 
-        async function downloadFromSource(url, title, author, coverUrl) {
-            // FIXED: Check if URL exists before trying to download
+        async function downloadBook(url, title, author) {
             if (!url || url.trim() === '') {
-                alert('Sorry, this book is not available in plain text format. Try searching for a different book or use Project Gutenberg source.');
+                alert('Sorry, this book is not available in plain text format.\n\n💡 Tip: Use Project Gutenberg source for best results.');
                 return;
             }
             
-            alert('Downloading: ' + title + '\nPlease wait...');
+            alert('Downloading: ' + title + '\n\nPlease wait...');
             
             try {
-                console.log('Downloading from:', url);
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Download failed with status: ' + response.status);
+                    throw new Error('Download failed');
                 }
                 
                 const text = await response.text();
                 
                 if (!text || text.trim().length < 50) {
-                    throw new Error('Downloaded file is empty or invalid');
+                    throw new Error('Downloaded file is empty');
                 }
                 
                 const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
@@ -665,7 +642,7 @@
                     author: author,
                     type: 'TXT',
                     content: paragraphs,
-                    cover: coverUrl,
+                    cover: '',
                     progress: 0,
                     folder: currentFolder || null,
                     source: currentSource,
@@ -678,7 +655,7 @@
                 
             } catch (err) {
                 console.error('Download error:', err);
-                alert('Download failed: ' + err.message + '\n\nThis book might only be available in other formats (PDF, EPUB). Try a different book or source.');
+                alert('Download failed: ' + err.message + '\n\n Try using Project Gutenberg source instead.');
             }
         }
 
@@ -736,7 +713,6 @@
             }
         }
 
-        // FIXED: Zoom functions now work properly
         function zoomIn() {
             readerFontSize += 2;
             if (readerFontSize > 40) readerFontSize = 40;
@@ -744,7 +720,6 @@
             if (textWrapper) {
                 textWrapper.style.fontSize = readerFontSize + 'px';
             }
-            console.log('Zoomed in to:', readerFontSize);
         }
 
         function zoomOut() {
@@ -754,7 +729,6 @@
             if (textWrapper) {
                 textWrapper.style.fontSize = readerFontSize + 'px';
             }
-            console.log('Zoomed out to:', readerFontSize);
         }
 
         async function deleteBook() {
@@ -803,7 +777,7 @@
                 isPaused = false;
                 document.getElementById('read-btn').style.display = 'none';
                 document.getElementById('pause-btn').style.display = 'inline-block';
-                document.getElementById('pause-btn').innerText = '️ Pause';
+                document.getElementById('pause-btn').innerText = '⏸️ Pause';
                 
                 speakNextChunk();
             }
@@ -852,7 +826,7 @@
             if (isPaused) {
                 synth.resume();
                 isPaused = false;
-                document.getElementById('pause-btn').innerText = '⏸️ Pause';
+                document.getElementById('pause-btn').innerText = '️ Pause';
             } else {
                 synth.pause();
                 isPaused = true;
