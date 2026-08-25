@@ -1,19 +1,45 @@
-{
-  "name": "ReadEase",
-  "short_name": "ReadEase",
-  "description": "Free offline reading app with text-to-speech, accessibility features, and support for kids & elderly readers.",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "orientation": "portrait-primary",
-  "categories": ["books", "education", "productivity"],
-  "icons": [
-    {
-      "src": "https://cdn.fbsbx.com/v/t65.102178-21/786352729_999207496464046_4271226627932746885_n.jpg/readease_512x512.png?_nc_ht=cdn.fbsbx.com&_nc_ohc=I9vAi1zQbQMQ7kNvwF5Jhgf&sdl=0&ccb=14-4&oh=00_AQHU5kMaXepKUS-1QtNl3lzzhhRmdBzKz-vSqGFd8_9OAw&oe=6A8ED127&_nc_sid=4ee932",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+// Download book using fast CORS proxy
+async function downloadBook(url,title,author){
+  if(!url){
+    alert('No text format available');
+    return;
+  }
+  
+  alert('Downloading: '+title+'\nPlease wait...');
+  
+  try{
+    // Use faster CORS proxy
+    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(url);
+    const response=await fetch(proxyUrl);
+    
+    if(!response.ok){
+      throw new Error('Download failed: '+response.status);
     }
-  ]
+    
+    const text=await response.text();
+    
+    if(text.length<50){
+      throw new Error('Empty file');
+    }
+    
+    const content=text.split('\n\n').map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
+    
+    const book={
+      title:title,
+      author:author,
+      type:'TXT',
+      content:content,
+      cover:'',
+      progress:0,
+      folder:currentFolder||null,
+      timestamp:Date.now()
+    };
+    
+    await db.books.add(book);
+    await loadBooks();
+    alert('✅ Downloaded! Check Library.');
+  }catch(err){
+    alert('Download failed: '+err.message+'\n\nTry searching for a different book.');
+    console.error('Download error:',err);
+  }
 }
