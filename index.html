@@ -57,7 +57,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 <div id="library-section" class="section active">
 <h1>📚 ReadEase</h1>
 <div class="upload-area" onclick="document.getElementById('file-input').click()">
-<div style="font-size:48px"></div>
+<div style="font-size:48px">📤</div>
 <div style="font-size:18px;font-weight:bold">Tap to Upload Book</div>
 <div style="color:#666">Supports: PDF, EPUB, TXT, HTML</div>
 </div>
@@ -77,7 +77,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 </div>
 
 <div id="download-section" class="section">
-<h1>🔍 Download Free Books</h1>
+<h1> Download Free Books</h1>
 <div class="warning"><strong>💡 Tip:</strong> Only <strong>Project Gutenberg</strong> works reliably for downloads.</div>
 <div style="margin:15px 0">
 <label style="display:block;margin-bottom:5px;font-weight:bold">Choose Source:</label>
@@ -132,7 +132,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #2563eb;borde
 <div class="progress-bar"><div class="progress-fill" id="reading-progress" style="width:0%"></div></div>
 <div class="reader-zoom-controls">
 <button class="btn btn-secondary" onclick="zoomIn()">🔍+</button>
-<button class="btn btn-secondary" onclick="zoomOut()">🔍-</button>
+<button class="btn btn-secondary" onclick="zoomOut()">-</button>
 <button class="btn btn-secondary" onclick="saveProgress()"> Save</button>
 </div>
 <div id="reader-content">
@@ -236,7 +236,7 @@ function renderFolders(){
     const div=document.createElement('div');
     div.className='folder-card';
     div.onclick=function(){openFolder(f.name)};
-    div.innerHTML='<div><div style="font-weight:bold">📁 '+f.name+'</div><div style="font-size:0.9em;color:#666">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
+    div.innerHTML='<div><div style="font-weight:bold"> '+f.name+'</div><div style="font-size:0.9em;color:#666">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
     div.querySelector('button').onclick=function(e){
       e.stopPropagation();
       deleteFolder(i,e);
@@ -532,7 +532,7 @@ async function searchBooks(){
   }
 }
 
-// Download book
+// Download book using CORS proxy
 async function downloadBook(url,title,author){
   if(!url){
     alert('No text format available');
@@ -542,7 +542,14 @@ async function downloadBook(url,title,author){
   alert('Downloading: '+title+'\nPlease wait...');
   
   try{
-    const response=await fetch(url);
+    // Use CORS proxy to bypass Gutenberg restrictions
+    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
+    const response=await fetch(proxyUrl);
+    
+    if(!response.ok){
+      throw new Error('Download failed: '+response.status);
+    }
+    
     const text=await response.text();
     
     if(text.length<50){
@@ -566,7 +573,7 @@ async function downloadBook(url,title,author){
     await loadBooks();
     alert('✅ Downloaded! Check Library.');
   }catch(err){
-    alert('Download failed: '+err.message);
+    alert('Download failed: '+err.message+'\n\nTry searching for a different book.');
     console.error('Download error:',err);
   }
 }
