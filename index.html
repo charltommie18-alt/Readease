@@ -156,6 +156,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 
 <script>
+console.log("Script starting...");
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const db=new Dexie('ReadEaseDB');
@@ -178,7 +179,6 @@ const categories={
   adventure:['adventure','treasure','island','journey','expedition','huckleberry','finn','robinson','crusoe','swiss','family']
 };
 
-// --- RELIABLE DIRECT DOWNLOAD DATABASE (Expanded Kids Links) ---
 const preloadedBooksDB = [
   { title: "Alice in Wonderland", author: "Lewis Carroll", category: "children", url: "https://www.gutenberg.org/cache/epub/11/pg11.txt" },
   { title: "Peter Pan", author: "J.M. Barrie", category: "children", url: "https://www.gutenberg.org/cache/epub/16/pg16.txt" },
@@ -202,9 +202,14 @@ const preloadedBooksDB = [
 
 async function init(){
   try{
+    console.log("Initializing app...");
     await loadFolders();
     await loadBooks();
-  }catch(err){ console.error('Init error:',err); }
+    console.log("App initialized successfully.");
+  }catch(err){ 
+    console.error('Init error:',err); 
+    alert('App initialization failed: ' + err.message);
+  }
 }
 
 async function loadFolders(){
@@ -235,7 +240,7 @@ function renderFolders(){
 
 async function renderMyBooks(){
   const c=document.getElementById('my-books-list');
-  if(!c)return;
+  if(!c){ console.error("my-books-list not found"); return; }
   const displayBooks=currentFolder?books.filter(b=>b.folder===currentFolder):books;
   if(displayBooks.length===0){
     c.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>No books yet.<br>Upload or download some!</p></div>';
@@ -247,7 +252,7 @@ async function renderMyBooks(){
     div.className='book-card';
     const infoDiv=document.createElement('div');
     infoDiv.className='book-info';
-    infoDiv.onclick=function(){openBook(b.id,false)};
+    infoDiv.onclick=function(){ openBook(b.id,false); };
     infoDiv.innerHTML='<div class="book-title">'+b.title+'</div><div class="book-author">'+b.author+'</div><div class="book-type">'+b.type+'</div>'+(b.progress?'<div style="font-size:0.8em;color:#28a745">📖 '+b.progress+'%</div>':'');
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
@@ -329,7 +334,13 @@ async function handleUpload(e){
     }else if(ext==='epub'){
       const zip=await JSZip.loadAsync(await file.arrayBuffer());
       let txt='';
-      zip.forEach((path,file)=>{ if(path.match(/\.(xhtml|html)$/i)&&!path.includes('META')) txt+=await file.async('text'); });
+      const promises = [];
+      zip.forEach((path, zipEntry) => {
+        if(path.match(/\.(xhtml|html)$/i) && !path.includes('META')) {
+          promises.push(zipEntry.async('text').then(text => { txt += text; }));
+        }
+      });
+      await Promise.all(promises);
       content=txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').split(/\n\s*\n/).filter(p=>p.length>50).map(p=>'<p>'+p.trim()+'</p>').join('');
     }else{ alert('Unsupported format'); return; }
     if(content.length<50){ alert('Could not extract text'); return; }
@@ -337,26 +348,28 @@ async function handleUpload(e){
     await loadBooks();
     alert('✅ Uploaded!');
     e.target.value='';
-  }catch(err){ alert('Error: '+err.message); }
+  }catch(err){ 
+    console.error('Upload error:', err);
+    alert('Error: '+err.message); 
+  }
 }
 
-// --- FIXED SEARCH: Prioritizes reliable direct links, falls back to API ---
 async function searchBooks() {
   const input = document.getElementById('search-box');
+  if (!input) { console.error("Search box not found!"); return; }
   const q = input.value.trim().toLowerCase();
   if(!q) return alert("Enter search term");
 
   const resultsDiv = document.getElementById('search-results');
+  if (!resultsDiv) { console.error("Results div not found!"); return; }
   resultsDiv.innerHTML = '<div style="text-align:center;padding:20px">🔍 Searching reliable database...</div>';
 
-  // 1. Search preloaded direct-link database first (100% reliable)
   let filteredResults = preloadedBooksDB.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q);
     const matchesCategory = currentCategory === 'all' || book.category === currentCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // 2. If no results, try live API as fallback
   if (filteredResults.length === 0) {
     try {
       const controller = new AbortController();
@@ -387,7 +400,6 @@ async function searchBooks() {
     }
   }
 
-  // Display results
   if (filteredResults.length === 0) {
     resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#6c757d">No books found. Try "Alice", "Wizard", "Peter", "Holmes"</div>';
     return;
@@ -410,7 +422,6 @@ async function searchBooks() {
   });
 }
 
-// --- FIXED DOWNLOAD: Uses your proxy logic + cleans text + saves to main library ---
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
   
@@ -432,17 +443,14 @@ async function downloadBook(url, title, author) {
       let text = await res.text();
       if (text.length < 500) continue;
 
-      // Clean Gutenberg header/footer
       const start = text.indexOf("*** START");
       const end = text.indexOf("*** END");
       if (start !== -1 && end !== -1) {
         text = text.substring(text.indexOf("\n", start) + 1, end);
       }
 
-      // Format for reader
       const content = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
       
-      // Save to IndexedDB (Dexie) - folder: null ensures it goes to main library, NOT a download folder
       await db.books.add({
         title: title,
         author: author,
@@ -454,7 +462,7 @@ async function downloadBook(url, title, author) {
         timestamp: Date.now()
       });
       
-      await loadBooks(); // Refresh library
+      await loadBooks();
       alert(`✅ ${title} downloaded! Check Library tab.`);
       return;
 
