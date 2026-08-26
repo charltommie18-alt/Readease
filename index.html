@@ -29,8 +29,9 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 #reader{position:fixed;top:0;left:0;right:0;bottom:0;background:white;z-index:100;display:none;flex-direction:column;padding:15px}
 #reader-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #2563eb}
 #reader-content{flex-grow:1;overflow-y:auto;padding:10px;font-size:18px}
-#reader-text-wrapper p,#reader-text-wrapper h1,#reader-text-wrapper h2,#reader-text-wrapper h3{margin:8px 0;line-height:1.6}
-#reader-content .speaking{background-color:#fff3cd;font-weight:bold}
+#reader-text-wrapper p{margin:8px 0;line-height:1.6;padding:4px 8px;border-radius:4px;transition:background-color 0.3s}
+#reader-text-wrapper .speaking{background-color:#fde047 !important;font-weight:bold;color:#000}
+#reader-text-wrapper .read{background-color:#fef3c7}
 #reader-controls{display:flex;gap:10px;padding:15px 0;border-top:2px solid #dee2e6}
 #reader-controls .btn{flex:1}
 .nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:15px;box-shadow:0 -2px 10px rgba(0,0,0,0.1);z-index:50;border-top:1px solid #dee2e6}
@@ -81,16 +82,16 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 
 <div id="download-section" class="section">
-<h1> Download Free Books</h1>
+<h1>🔍 Download Free Books</h1>
 <div class="warning"><strong>💡 Tip:</strong> Search our massive reliable database first. Includes 30+ guaranteed kids' & classic links!</div>
 <div style="margin:15px 0">
 <label style="display:block;margin-bottom:5px;font-weight:600">Category:</label>
 </div>
 <div class="category-tabs">
 <button class="btn btn-secondary active" onclick="setCategory('all',this)">All</button>
-<button class="btn btn-secondary" onclick="setCategory('children',this)">👶 Children</button>
-<button class="btn btn-secondary" onclick="setCategory('classics',this)">📖 Classics</button>
-<button class="btn btn-secondary" onclick="setCategory('fiction',this)">📚 Fiction</button>
+<button class="btn btn-secondary" onclick="setCategory('children',this)"> Children</button>
+<button class="btn btn-secondary" onclick="setCategory('classics',this)"> Classics</button>
+<button class="btn btn-secondary" onclick="setCategory('fiction',this)"> Fiction</button>
 <button class="btn btn-secondary" onclick="setCategory('adventure',this)">⚔️ Adventure</button>
 </div>
 <input type="text" id="search-box" placeholder="Search (e.g., Alice, Wizard, Peter, Little Prince)..." onkeypress="if(event.key==='Enter')searchBooks()">
@@ -99,7 +100,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <div class="nav">
 <button onclick="showSection('library',this)">📚 Library</button>
 <button class="active" onclick="showSection('download',this)"> Download</button>
-<button onclick="showSection('settings',this)">️ Settings</button>
+<button onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
 </div>
 
@@ -121,7 +122,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <div style="text-align:center;color:#6c757d">Speed: <span id="rate-val">0.9</span>x</div>
 <div class="nav">
 <button onclick="showSection('library',this)">📚 Library</button>
-<button onclick="showSection('download',this)"> Download</button>
+<button onclick="showSection('download',this)">🔍 Download</button>
 <button class="active" onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
 </div>
@@ -278,7 +279,7 @@ async function renderMyBooks(){
     
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
-    deleteBtn.innerText='️';
+    deleteBtn.innerText='🗑️';
     deleteBtn.onclick=function(e){ e.stopPropagation(); deleteBookFromDB(b.id,e); };
     
     actionsDiv.appendChild(moveBtn);
@@ -400,7 +401,7 @@ async function searchBooks() {
 
   const resultsDiv = document.getElementById('search-results');
   if (!resultsDiv) { console.error("Results div not found!"); return; }
-  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px"> Searching massive database...</div>';
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px">🔍 Searching massive database...</div>';
 
   let filteredResults = preloadedBooksDB.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q);
@@ -457,7 +458,6 @@ async function searchBooks() {
   });
 }
 
-// --- FIXED DOWNLOAD: Chops text into small paragraphs so the Voice Reader doesn't crash ---
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
   
@@ -478,7 +478,6 @@ async function downloadBook(url, title, author) {
       let text = await res.text();
       if (text.length < 500) continue;
 
-      // Clean Gutenberg header/footer
       const startMarker = text.indexOf("*** START");
       const endMarker = text.indexOf("*** END");
       if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) {
@@ -486,13 +485,10 @@ async function downloadBook(url, title, author) {
         text = text.substring(startLineEnd + 1, endMarker);
       }
 
-      // THE FIX: Split by single newline and wrap every line in a <p> tag.
-      // This prevents the voice reader from trying to read the whole book at once and crashing.
       const lines = text.split('\n');
       const paragraphs = [];
       for (let line of lines) {
         line = line.trim();
-        // Skip empty lines, short lines (page numbers), and lines that are just dashes
         if (line.length > 15 && !line.startsWith('***') && !line.startsWith('---')) {
           paragraphs.push(`<p>${line}</p>`);
         }
@@ -563,6 +559,7 @@ async function deleteBookFromDB(id,e){
   try{ await db.books.delete(id); await loadBooks(); }catch(err){ alert('Error: '+err.message); }
 }
 
+// --- FIXED TTS WITH PROPER HIGHLIGHTING ---
 function toggleRead(){
   if(isSpeaking&&!isPaused){
     synth.pause(); isPaused=true;
@@ -573,10 +570,18 @@ function toggleRead(){
     synth.resume(); isPaused=false;
     document.getElementById('pause-btn').innerText='⏸️ Pause';
   }else{
+    // Get all paragraphs from the DOM
     const paragraphs=Array.from(document.querySelectorAll('#reader-text-wrapper p'));
     speechQueue=paragraphs.map(p=>p.innerText.trim()).filter(t=>t.length>0);
-    if(speechQueue.length===0){ const w=document.getElementById('reader-text-wrapper'); if(w)speechQueue=[w.innerText]; }
-    currentSpeechIndex=0; isSpeaking=true; isPaused=false;
+    
+    if(speechQueue.length===0){ 
+      const w=document.getElementById('reader-text-wrapper'); 
+      if(w) speechQueue=[w.innerText]; 
+    }
+    
+    currentSpeechIndex=0; 
+    isSpeaking=true; 
+    isPaused=false;
     document.getElementById('read-btn').style.display='none';
     document.getElementById('pause-btn').style.display='inline-block';
     speakNextChunk();
@@ -584,29 +589,72 @@ function toggleRead(){
 }
 
 function speakNextChunk(){
-  if(currentSpeechIndex>=speechQueue.length||(!isSpeaking||isPaused)){ if(currentSpeechIndex>=speechQueue.length)stopRead(); return; }
+  // Stop if we've reached the end or if paused/stopped
+  if(currentSpeechIndex>=speechQueue.length||(!isSpeaking||isPaused)){ 
+    if(currentSpeechIndex>=speechQueue.length) stopRead(); 
+    return; 
+  }
+  
   const text=speechQueue[currentSpeechIndex];
-  document.querySelectorAll('.speaking').forEach(el=>el.classList.remove('speaking'));
+  
+  // Get all paragraphs from DOM
   const paragraphs=document.querySelectorAll('#reader-text-wrapper p');
+  
+  // Remove ALL highlights first
+  paragraphs.forEach(p => {
+    p.classList.remove('speaking');
+  });
+  
+  // Highlight the CURRENT paragraph being spoken
   if(paragraphs[currentSpeechIndex]){
     paragraphs[currentSpeechIndex].classList.add('speaking');
     paragraphs[currentSpeechIndex].scrollIntoView({behavior:'smooth',block:'center'});
   }
+  
+  // Create utterance
   currentUtterance=new SpeechSynthesisUtterance(text);
   currentUtterance.rate=ttsRate;
-  currentUtterance.onend=function(){ currentSpeechIndex++; setTimeout(speakNextChunk,200); };
-  currentUtterance.onerror=function(){ currentSpeechIndex++; setTimeout(speakNextChunk,200); };
+  
+  // When this chunk finishes speaking
+  currentUtterance.onend=function(){
+    // Keep the highlight for a moment so user can see it
+    setTimeout(() => {
+      if(paragraphs[currentSpeechIndex]){
+        paragraphs[currentSpeechIndex].classList.remove('speaking');
+        paragraphs[currentSpeechIndex].classList.add('read');
+      }
+      currentSpeechIndex++;
+      speakNextChunk();
+    }, 300); // 300ms delay so highlight is visible
+  };
+  
+  currentUtterance.onerror=function(){
+    console.error('TTS error:', currentUtterance.error);
+    if(paragraphs[currentSpeechIndex]){
+      paragraphs[currentSpeechIndex].classList.remove('speaking');
+    }
+    currentSpeechIndex++;
+    setTimeout(() => speakNextChunk(), 300);
+  };
+  
   synth.speak(currentUtterance);
 }
 
 function pauseRead(){
-  if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='⏸️ Pause'; }
+  if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='️ Pause'; }
   else{ synth.pause(); isPaused=true; document.getElementById('pause-btn').innerText='▶️ Resume'; }
 }
 
 function stopRead(){
-  synth.cancel(); isSpeaking=false; isPaused=false; speechQueue=[]; currentSpeechIndex=0;
-  document.querySelectorAll('.speaking').forEach(el=>el.classList.remove('speaking'));
+  synth.cancel(); 
+  isSpeaking=false; 
+  isPaused=false; 
+  speechQueue=[]; 
+  currentSpeechIndex=0;
+  // Remove ALL highlights
+  document.querySelectorAll('#reader-text-wrapper p').forEach(el => {
+    el.classList.remove('speaking', 'read');
+  });
   document.getElementById('read-btn').style.display='inline-block';
   document.getElementById('pause-btn').style.display='none';
 }
