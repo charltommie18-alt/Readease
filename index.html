@@ -29,8 +29,8 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 #reader{position:fixed;top:0;left:0;right:0;bottom:0;background:white;z-index:100;display:none;flex-direction:column;padding:15px}
 #reader-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #2563eb}
 #reader-content{flex-grow:1;overflow-y:auto;padding:10px;font-size:18px}
-#reader-text-wrapper p{margin:8px 0;line-height:1.6;padding:4px 8px;border-radius:4px;transition:background-color 0.3s}
-#reader-text-wrapper .speaking{background-color:#fde047 !important;font-weight:bold;color:#000}
+#reader-text-wrapper p{margin:12px 0;line-height:1.7;padding:6px 8px;border-radius:6px;transition:background-color 0.4s}
+#reader-text-wrapper .speaking{background-color:#fde047 !important;font-weight:bold;color:#000;box-shadow:0 0 0 2px #fbbf24}
 #reader-text-wrapper .read{background-color:#fef3c7}
 #reader-controls{display:flex;gap:10px;padding:15px 0;border-top:2px solid #dee2e6}
 #reader-controls .btn{flex:1}
@@ -458,6 +458,7 @@ async function searchBooks() {
   });
 }
 
+// --- FIXED DOWNLOAD: Creates PROPER PARAGRAPHS (not single lines) so TTS highlights stay visible ---
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
   
@@ -478,6 +479,7 @@ async function downloadBook(url, title, author) {
       let text = await res.text();
       if (text.length < 500) continue;
 
+      // Clean Gutenberg header/footer
       const startMarker = text.indexOf("*** START");
       const endMarker = text.indexOf("*** END");
       if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) {
@@ -485,17 +487,30 @@ async function downloadBook(url, title, author) {
         text = text.substring(startLineEnd + 1, endMarker);
       }
 
-      const lines = text.split('\n');
+      // THE FIX: Split by DOUBLE newlines to create proper paragraphs
+      // This makes each paragraph ~3-5 sentences, so the highlight stays visible for several seconds
+      const rawParagraphs = text.split(/\n\s*\n/);
       const paragraphs = [];
-      for (let line of lines) {
-        line = line.trim();
-        if (line.length > 15 && !line.startsWith('***') && !line.startsWith('---')) {
-          paragraphs.push(`<p>${line}</p>`);
-        }
+      
+      for (let para of rawParagraphs) {
+        // Clean the paragraph
+        para = para.replace(/\s+/g, ' ').trim();
+        
+        // Skip junk (short lines, page numbers, headers)
+        if (para.length < 30) continue;
+        if (para.startsWith('***')) continue;
+        if (/^\d+$/.test(para)) continue; // Just a number
+        if (para.length < 100 && para.toUpperCase() === para) continue; // ALL CAPS header
+        if (para.includes('Project Gutenberg') && para.length < 200) continue;
+        if (para.includes('License') && para.length < 200) continue;
+        
+        // Wrap in <p> tag
+        paragraphs.push('<p>' + para + '</p>');
       }
+      
       const content = paragraphs.join('');
 
-      if (content.length < 100) {
+      if (content.length < 500) {
          console.warn("Cleaning made text too short, skipping.");
          continue;
       }
@@ -559,7 +574,7 @@ async function deleteBookFromDB(id,e){
   try{ await db.books.delete(id); await loadBooks(); }catch(err){ alert('Error: '+err.message); }
 }
 
-// --- FIXED TTS WITH PROPER HIGHLIGHTING ---
+// --- FIXED TTS: Each paragraph is a full chunk, so highlight stays visible for seconds ---
 function toggleRead(){
   if(isSpeaking&&!isPaused){
     synth.pause(); isPaused=true;
@@ -570,9 +585,9 @@ function toggleRead(){
     synth.resume(); isPaused=false;
     document.getElementById('pause-btn').innerText='⏸️ Pause';
   }else{
-    // Get all paragraphs from the DOM
+    // Get all paragraphs from the DOM - each one is now a full paragraph (3-5 sentences)
     const paragraphs=Array.from(document.querySelectorAll('#reader-text-wrapper p'));
-    speechQueue=paragraphs.map(p=>p.innerText.trim()).filter(t=>t.length>0);
+    speechQueue=paragraphs.map(p=>p.innerText.trim()).filter(t=>t.length>10);
     
     if(speechQueue.length===0){ 
       const w=document.getElementById('reader-text-wrapper'); 
@@ -600,9 +615,15 @@ function speakNextChunk(){
   // Get all paragraphs from DOM
   const paragraphs=document.querySelectorAll('#reader-text-wrapper p');
   
-  // Remove ALL highlights first
-  paragraphs.forEach(p => {
-    p.classList.remove('speaking');
+  // Remove the "currently speaking" highlight from all paragraphs
+  // But KEEP the "already read" highlight on previous ones
+  paragraphs.forEach((p, idx) => {
+    if (idx < currentSpeechIndex) {
+      p.classList.add('read');
+      p.classList.remove('speaking');
+    } else {
+      p.classList.remove('speaking');
+    }
   });
   
   // Highlight the CURRENT paragraph being spoken
@@ -611,21 +632,20 @@ function speakNextChunk(){
     paragraphs[currentSpeechIndex].scrollIntoView({behavior:'smooth',block:'center'});
   }
   
-  // Create utterance
+  // Create utterance for this full paragraph
   currentUtterance=new SpeechSynthesisUtterance(text);
   currentUtterance.rate=ttsRate;
   
-  // When this chunk finishes speaking
+  // When this paragraph finishes speaking
   currentUtterance.onend=function(){
-    // Keep the highlight for a moment so user can see it
-    setTimeout(() => {
-      if(paragraphs[currentSpeechIndex]){
-        paragraphs[currentSpeechIndex].classList.remove('speaking');
-        paragraphs[currentSpeechIndex].classList.add('read');
-      }
-      currentSpeechIndex++;
-      speakNextChunk();
-    }, 300); // 300ms delay so highlight is visible
+    // Mark as read (light yellow stays)
+    if(paragraphs[currentSpeechIndex]){
+      paragraphs[currentSpeechIndex].classList.remove('speaking');
+      paragraphs[currentSpeechIndex].classList.add('read');
+    }
+    currentSpeechIndex++;
+    // Small pause between paragraphs for natural feel
+    setTimeout(() => speakNextChunk(), 400);
   };
   
   currentUtterance.onerror=function(){
@@ -634,14 +654,14 @@ function speakNextChunk(){
       paragraphs[currentSpeechIndex].classList.remove('speaking');
     }
     currentSpeechIndex++;
-    setTimeout(() => speakNextChunk(), 300);
+    setTimeout(() => speakNextChunk(), 400);
   };
   
   synth.speak(currentUtterance);
 }
 
 function pauseRead(){
-  if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='️ Pause'; }
+  if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='⏸️ Pause'; }
   else{ synth.pause(); isPaused=true; document.getElementById('pause-btn').innerText='▶️ Resume'; }
 }
 
