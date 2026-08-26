@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;font-size:18px;line-height:1.6;padding:20px;padding-bottom:100px;background:#f8f9fa;color:#212529}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;font-size:18px;line-height:1.6;padding:20px;padding-bottom:100px;background:#f8f9fa;color:#212529;transition:background 0.3s, color 0.3s}
 h1{color:#2563eb;margin-bottom:20px;font-size:2em;font-weight:700}
 h2{color:#495057;margin:20px 0 10px 0;font-size:1.2em;font-weight:600}
 .btn{background:#2563eb;color:white;border:none;padding:15px;border-radius:10px;font-size:16px;font-weight:600;margin:5px 0;width:100%;cursor:pointer;transition:all 0.3s}
@@ -62,12 +62,12 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <body>
 
 <div id="library-section" class="section active">
-<h1> ReadEase</h1>
+<h1>📚 ReadEase</h1>
 <button id="back-to-lib-btn" class="btn btn-secondary" onclick="backToLibrary()" style="display:none;margin-bottom:10px">← Back to Library</button>
 <div class="upload-area" onclick="document.getElementById('file-input').click()">
 <div style="font-size:48px;margin-bottom:10px">📤</div>
 <div style="font-size:20px;font-weight:600;color:white">Tap to Upload Book</div>
-<div style="color:rgba(255,255,255,0.9);margin-top:5px">Supports: PDF, EPUB, TXT, HTML</div>
+<div style="color:rgba(255,255,255,0.9);margin-top:5px">Supports: PDF, EPUB, TXT, HTML (Up to 200MB)</div>
 </div>
 <input type="file" id="file-input" accept=".txt,.pdf,.epub,.html" onchange="handleUpload(event)">
 <h2>My Folders</h2>
@@ -96,10 +96,10 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <button class="btn btn-secondary" onclick="setCategory('adventure',this)">⚔️ Adventure</button>
 </div>
 <input type="text" id="search-box" placeholder="Search (e.g., Alice, Wizard, Peter, Little Prince)..." onkeypress="if(event.key==='Enter')searchBooks()">
-<button class="btn" onclick="searchBooks()">🔍 Search</button>
+<button class="btn" onclick="searchBooks()"> Search</button>
 <div id="search-results"></div>
 <div class="nav">
-<button onclick="showSection('library',this)"> Library</button>
+<button onclick="showSection('library',this)">📚 Library</button>
 <button class="active" onclick="showSection('download',this)">🔍 Download</button>
 <button onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
@@ -108,7 +108,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <div id="settings-section" class="section">
 <h1>⚙️ Settings</h1>
 <h2>Font Size: <span id="size-val">18</span>px</h2>
-<input type="range" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%;height:40px;margin:15px 0">
+<input type="range" id="font-size-slider" min="14" max="40" value="18" oninput="changeSize(this.value)" style="width:100%;height:40px;margin:15px 0">
 <h2 style="margin-top:30px">Theme</h2>
 <button class="btn btn-secondary" onclick="setTheme('')">Normal (White)</button>
 <button class="btn btn-secondary" onclick="setTheme('sepia')">Sepia (Warm)</button>
@@ -119,11 +119,11 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <button class="btn btn-secondary" onclick="setFont('Arial, sans-serif')">Sans Serif</button>
 <button class="btn btn-secondary" onclick="setFont('Comic Sans MS, cursive')">Kids/Dyslexia</button>
 <h2 style="margin-top:30px">Voice Speed</h2>
-<input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="ttsRate=this.value;document.getElementById('rate-val').innerText=this.value" style="width:100%;height:40px;margin:15px 0">
+<input type="range" id="tts-rate-slider" min="0.5" max="2" step="0.1" value="0.9" oninput="updateTTSRate(this.value)" style="width:100%;height:40px;margin:15px 0">
 <div style="text-align:center;color:#6c757d">Speed: <span id="rate-val">0.9</span>x</div>
 <div class="nav">
-<button onclick="showSection('library',this)"> Library</button>
-<button onclick="showSection('download',this)">🔍 Download</button>
+<button onclick="showSection('library',this)">📚 Library</button>
+<button onclick="showSection('download',this)"> Download</button>
 <button class="active" onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
 </div>
@@ -145,8 +145,8 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 <div id="reader-controls">
 <button class="btn" id="read-btn" onclick="toggleRead()">▶️ Read</button>
-<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">️ Pause</button>
-<button class="btn btn-secondary" onclick="stopRead()">️ Stop</button>
+<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">⏸️ Pause</button>
+<button class="btn btn-secondary" onclick="stopRead()">⏹️ Stop</button>
 </div>
 </div>
 
@@ -175,12 +175,13 @@ let readerFontSize=18,ttsRate=0.9,currentCategory='all';
 const synth=window.speechSynthesis;
 let currentUtterance=null;
 
+// --- UPDATED CATEGORIES WITH MORE KEYWORDS ---
 const categories={
   all:[],
   children:['alice','wonderland','peter pan','winnie','fairy','tale','children','kids','wizard','oz','pinocchio','carroll','barrie','potter','beatrix','grimm','andersen','jungle','secret garden','anne','little women','black beauty','little prince','wind willows','rabbit'],
   classics:['dickens','austen','twain','shakespeare','classic','pride','prejudice','gatsby','jane','eyre','bronte','doyle','stoker','wells','holmes','dracula','frankenstein'],
-  fiction:['novel','fiction','story','romance','mystery','detective'],
-  adventure:['adventure','treasure','island','journey','expedition','huckleberry','finn','robinson','crusoe','swiss','family','leagues','sea','verne']
+  fiction:['novel','fiction','story','romance','mystery','detective','thriller','crime','suspense','drama','comedy','satire','gothic','horror','ghost','love','passion','tale','legend','magic','fantasy'],
+  adventure:['adventure','treasure','island','journey','expedition','huckleberry','finn','robinson','crusoe','swiss','family','leagues','sea','verne','quest','survival','voyage','exploration','wild','frontier','outlaw','pirate','ship','mountain','desert','jungle','cave','war','battle','hero','camp']
 };
 
 const preloadedBooksDB = [
@@ -214,15 +215,39 @@ const preloadedBooksDB = [
   { title: "White Fang", author: "Jack London", category: "adventure", url: "https://www.gutenberg.org/cache/epub/910/pg910.txt" }
 ];
 
+// --- SETTINGS PERSISTENCE ---
+function loadSettings() {
+  const savedSize = localStorage.getItem('re_fontSize');
+  if (savedSize) {
+    readerFontSize = parseInt(savedSize);
+    document.body.style.fontSize = savedSize + 'px';
+    document.getElementById('size-val').innerText = savedSize;
+    document.getElementById('font-size-slider').value = savedSize;
+  }
+  
+  const savedTheme = localStorage.getItem('re_theme');
+  if (savedTheme) setTheme(savedTheme, true);
+  
+  const savedFont = localStorage.getItem('re_font');
+  if (savedFont) setFont(savedFont, true);
+  
+  const savedRate = localStorage.getItem('re_rate');
+  if (savedRate) {
+    ttsRate = parseFloat(savedRate);
+    document.getElementById('tts-rate-slider').value = savedRate;
+    document.getElementById('rate-val').innerText = savedRate;
+  }
+}
+
 async function init(){
   try{
     console.log("Initializing app...");
+    loadSettings(); // Load saved settings first
     await loadFolders();
     await loadBooks();
     console.log("App initialized successfully.");
   }catch(err){ 
     console.error('Init error:',err); 
-    alert('App initialization failed: ' + err.message);
   }
 }
 
@@ -246,7 +271,7 @@ function renderFolders(){
     const div=document.createElement('div');
     div.className='folder-card';
     div.onclick=function(){openFolder(f.name)};
-    div.innerHTML='<div><div style="font-weight:600">📁 '+f.name+'</div><div style="font-size:0.9em;color:#6c757d">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
+    div.innerHTML='<div><div style="font-weight:600"> '+f.name+'</div><div style="font-size:0.9em;color:#6c757d">'+count+' books</div></div><button class="btn btn-danger" style="width:auto;padding:8px">🗑️</button>';
     div.querySelector('button').onclick=function(e){ e.stopPropagation(); deleteFolder(i,e); };
     c.appendChild(div);
   });
@@ -255,10 +280,7 @@ function renderFolders(){
 async function renderMyBooks(){
   const c=document.getElementById('my-books-list');
   if(!c){ console.error("my-books-list not found"); return; }
-  
-  // Only show books that are NOT in any folder (folder is null or undefined)
   const displayBooks = currentFolder ? books.filter(b => b.folder === currentFolder) : books.filter(b => b.folder === null || b.folder === undefined);
-  
   if(displayBooks.length===0){
     c.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>No books in '+(currentFolder?'"'+currentFolder+'"':'main library')+'.<br>Upload or download some!</p></div>';
     return;
@@ -271,21 +293,16 @@ async function renderMyBooks(){
     infoDiv.className='book-info';
     infoDiv.onclick=function(){ openBook(b.id,false); };
     infoDiv.innerHTML='<div class="book-title">'+b.title+'</div><div class="book-author">'+b.author+'</div><div class="book-type">'+b.type+'</div>'+(b.progress?'<div style="font-size:0.8em;color:#28a745">📖 '+b.progress+'%</div>':'');
-    
     const actionsDiv=document.createElement('div');
     actionsDiv.className='book-actions';
-    
     const moveBtn=document.createElement('button');
     moveBtn.className='btn btn-secondary';
     moveBtn.innerText='📁';
-    moveBtn.title='Move to folder';
     moveBtn.onclick=function(e){ e.stopPropagation(); moveBookToFolder(b.id); };
-    
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
-    deleteBtn.innerText='️';
+    deleteBtn.innerText='🗑️';
     deleteBtn.onclick=function(e){ e.stopPropagation(); deleteBookFromDB(b.id,e); };
-    
     actionsDiv.appendChild(moveBtn);
     actionsDiv.appendChild(deleteBtn);
     div.appendChild(infoDiv);
@@ -298,7 +315,7 @@ function backToLibrary() {
   currentFolder = null;
   renderMyBooks();
   const h1 = document.querySelector('#library-section h1');
-  if(h1) h1.innerText = '📚 ReadEase';
+  if(h1) h1.innerText = ' ReadEase';
   const backBtn = document.getElementById('back-to-lib-btn');
   if(backBtn) backBtn.style.display = 'none';
 }
@@ -306,33 +323,16 @@ function backToLibrary() {
 function moveBookToFolder(bookId) {
   const folderName = prompt("Enter folder name to move to:\n(Leave blank to return to main library)");
   if (folderName === null) return;
-  
   const targetFolder = folderName.trim() === "" ? null : folderName.trim();
-  
   try {
     const book = books.find(b => b.id === bookId);
-    if (!book) {
-      alert('Book not found');
-      return;
-    }
-    
+    if (!book) { alert('Book not found'); return; }
     if (targetFolder) {
       let folder = folders.find(f => f.name === targetFolder);
-      if (!folder) {
-        db.folders.add({ name: targetFolder, created: Date.now() }).then(() => {
-          loadFolders();
-        });
-      }
+      if (!folder) { db.folders.add({ name: targetFolder, created: Date.now() }).then(() => loadFolders()); }
     }
-    
-    db.books.update(bookId, { folder: targetFolder }).then(() => {
-      loadBooks();
-      loadFolders();
-      alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library");
-    });
-  } catch (err) {
-    alert('Error moving book: ' + err.message);
-  }
+    db.books.update(bookId, { folder: targetFolder }).then(() => { loadBooks(); loadFolders(); alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library"); });
+  } catch (err) { alert('Error moving book: ' + err.message); }
 }
 
 function showSection(name,btn){
@@ -341,14 +341,7 @@ function showSection(name,btn){
   if(section)section.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  if(name==='library'){ 
-    currentFolder=null; 
-    const h1 = document.querySelector('#library-section h1');
-    if(h1) h1.innerText = ' ReadEase';
-    const backBtn = document.getElementById('back-to-lib-btn');
-    if(backBtn) backBtn.style.display = 'none';
-    renderMyBooks(); 
-  }
+  if(name==='library'){ currentFolder=null; const h1 = document.querySelector('#library-section h1'); if(h1) h1.innerText = '📚 ReadEase'; const backBtn = document.getElementById('back-to-lib-btn'); if(backBtn) backBtn.style.display = 'none'; renderMyBooks(); }
 }
 
 function setCategory(cat,btn){
@@ -366,12 +359,7 @@ async function createFolder(){
   const name=input.value.trim();
   if(!name){ alert('Enter folder name'); return; }
   if(folders.find(f=>f.name===name)){ alert('Folder exists'); return; }
-  try{
-    await db.folders.add({name:name,created:Date.now()});
-    await loadFolders();
-    closeFolderModal();
-    alert('✅ Folder created!');
-  }catch(err){ alert('Error: '+err.message); }
+  try{ await db.folders.add({name:name,created:Date.now()}); await loadFolders(); closeFolderModal(); alert('✅ Folder created!'); }catch(err){ alert('Error: '+err.message); }
 }
 
 async function deleteFolder(i,e){
@@ -379,93 +367,65 @@ async function deleteFolder(i,e){
   if(!confirm('Delete folder? Books will move to main library.'))return;
   try{
     const name=folders[i].name;
-    for(const book of books){
-      if(book.folder===name){ book.folder=null; await db.books.update(book.id,{folder:null}); }
-    }
-    await db.folders.delete(folders[i].id);
-    await loadFolders(); await loadBooks();
+    for(const book of books){ if(book.folder===name){ book.folder=null; await db.books.update(book.id,{folder:null}); } }
+    await db.folders.delete(folders[i].id); await loadFolders(); await loadBooks();
   }catch(err){ alert('Error: '+err.message); }
 }
 
 function openFolder(folderName){ 
-  currentFolder=folderName; 
-  renderMyBooks();
-  const h1 = document.querySelector('#library-section h1');
-  if(h1) h1.innerText = ' ' + folderName;
-  const backBtn = document.getElementById('back-to-lib-btn');
-  if(backBtn) backBtn.style.display = 'block';
+  currentFolder=folderName; renderMyBooks();
+  const h1 = document.querySelector('#library-section h1'); if(h1) h1.innerText = '📁 ' + folderName;
+  const backBtn = document.getElementById('back-to-lib-btn'); if(backBtn) backBtn.style.display = 'block';
 }
 
 async function handleUpload(e){
   const file=e.target.files[0];
   if(!file)return;
-  if(file.size>50*1024*1024){ alert('File too large (max 50MB)'); return; }
+  // UPDATED: Increased limit to 200MB for bigger books
+  if(file.size>200*1024*1024){ alert('File too large (max 200MB)'); return; }
   const ext=file.name.split('.').pop().toLowerCase();
-  alert('Processing: '+file.name);
+  alert('Processing: '+file.name+'\nLarge files may take a moment...');
   try{
     let content='';
     if(ext==='txt'||ext==='html'){
       content=await file.text();
       if(ext==='txt') content=content.split('\n\n').map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
     }else if(ext==='pdf'){
-      // FIXED PDF EXTRACTION - Creates proper paragraphs using word coordinates
       const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
       for(let i=1;i<=pdf.numPages;i++){
         const page=await pdf.getPage(i);
         const textContent=await page.getTextContent();
         const items = textContent.items.filter(item => item.str.trim().length > 0);
         if (items.length === 0) continue;
-        
-        // Group items by line (same y-coordinate)
         const lines = [];
         let currentLine = { y: items[0].transform[5], words: [] };
-        
         for (const item of items) {
           const y = item.transform[5];
-          if (Math.abs(y - currentLine.y) < 3) {
-            currentLine.words.push(item.str);
-          } else {
-            lines.push({ y: currentLine.y, text: currentLine.words.join(' ').trim() });
-            currentLine = { y: y, words: [item.str] };
-          }
+          if (Math.abs(y - currentLine.y) < 3) { currentLine.words.push(item.str); } 
+          else { lines.push({ y: currentLine.y, text: currentLine.words.join(' ').trim() }); currentLine = { y: y, words: [item.str] }; }
         }
         lines.push({ y: currentLine.y, text: currentLine.words.join(' ').trim() });
         lines.sort((a, b) => b.y - a.y);
-        
-        // Group lines into paragraphs based on gap size
         const paragraphs = [];
         let currentParagraph = [lines[0].text];
         let prevY = lines[0].y;
-        
         for (let j = 1; j < lines.length; j++) {
           const gap = prevY - lines[j].y;
           const lineText = lines[j].text;
-          if (gap > 8 || lineText.length < 5) {
-            const paraText = currentParagraph.join(' ').trim();
-            if (paraText.length > 20) paragraphs.push(paraText);
-            currentParagraph = [lineText];
-          } else {
-            currentParagraph.push(lineText);
-          }
+          if (gap > 8 || lineText.length < 5) { const paraText = currentParagraph.join(' ').trim(); if (paraText.length > 20) paragraphs.push(paraText); currentParagraph = [lineText]; } 
+          else { currentParagraph.push(lineText); }
           prevY = lines[j].y;
         }
         const lastPara = currentParagraph.join(' ').trim();
         if (lastPara.length > 20) paragraphs.push(lastPara);
-        
         content += '<h2>Page ' + i + '</h2>';
-        for (const para of paragraphs) {
-          content += '<p>' + para + '</p>';
-        }
+        for (const para of paragraphs) { content += '<p>' + para + '</p>'; }
       }
     }else if(ext==='epub'){
       const zip=await JSZip.loadAsync(await file.arrayBuffer());
       let txt='';
       const promises = [];
-      zip.forEach((path, zipEntry) => {
-        if(path.match(/\.(xhtml|html)$/i) && !path.includes('META')) {
-          promises.push(zipEntry.async('text').then(text => { txt += text; }));
-        }
-      });
+      zip.forEach((path, zipEntry) => { if(path.match(/\.(xhtml|html)$/i) && !path.includes('META')) { promises.push(zipEntry.async('text').then(text => { txt += text; })); } });
       await Promise.all(promises);
       content=txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').split(/\n\s*\n/).filter(p=>p.length>50).map(p=>'<p>'+p.trim()+'</p>').join('');
     }else{ alert('Unsupported format'); return; }
@@ -474,28 +434,21 @@ async function handleUpload(e){
     await loadBooks();
     alert('✅ Uploaded!');
     e.target.value='';
-  }catch(err){ 
-    console.error('Upload error:', err);
-    alert('Error: '+err.message); 
-  }
+  }catch(err){ console.error('Upload error:', err); alert('Error: '+err.message); }
 }
 
 async function searchBooks() {
   const input = document.getElementById('search-box');
-  if (!input) { console.error("Search box not found!"); return; }
+  if (!input) return;
   const q = input.value.trim().toLowerCase();
   if(!q) return alert("Enter search term");
-
   const resultsDiv = document.getElementById('search-results');
-  if (!resultsDiv) { console.error("Results div not found!"); return; }
   resultsDiv.innerHTML = '<div style="text-align:center;padding:20px">🔍 Searching massive database...</div>';
-
   let filteredResults = preloadedBooksDB.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q);
     const matchesCategory = currentCategory === 'all' || book.category === currentCategory;
     return matchesSearch && matchesCategory;
   });
-
   if (filteredResults.length === 0) {
     try {
       const controller = new AbortController();
@@ -512,22 +465,12 @@ async function searchBooks() {
           }
           const url = book.formats['text/plain; charset=utf-8'] || book.formats['text/plain'];
           if (!url) continue;
-          filteredResults.push({
-            title: book.title,
-            author: book.authors && book.authors[0] ? book.authors[0].name || 'Unknown' : 'Unknown',
-            url: url,
-            source: 'api'
-          });
+          filteredResults.push({ title: book.title, author: book.authors && book.authors[0] ? book.authors[0].name || 'Unknown' : 'Unknown', url: url, source: 'api' });
         }
       }
-    } catch(e) { console.log("API search failed, showing preloaded fallback"); }
+    } catch(e) { console.log("API search failed"); }
   }
-
-  if (filteredResults.length === 0) {
-    resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#6c757d">No books found. Try "Alice", "Wizard", "Peter", "Little Prince", "Holmes"</div>';
-    return;
-  }
-
+  if (filteredResults.length === 0) { resultsDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#6c757d">No books found. Try "Alice", "Wizard", "Peter", "Little Prince", "Holmes"</div>'; return; }
   resultsDiv.innerHTML = '';
   filteredResults.forEach(book => {
     const div = document.createElement('div');
@@ -547,34 +490,21 @@ async function searchBooks() {
 
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
-  
-  const proxies = [
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url
-  ];
-
+  const proxies = [`https://corsproxy.io/?${encodeURIComponent(url)}`, `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, url];
   for (let proxyUrl of proxies) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       const res = await fetch(proxyUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
-      
       if (!res.ok) continue;
       let text = await res.text();
       if (text.length < 500) continue;
-
       const startMarker = text.indexOf("*** START");
       const endMarker = text.indexOf("*** END");
-      if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) {
-        const startLineEnd = text.indexOf("\n", startMarker);
-        text = text.substring(startLineEnd + 1, endMarker);
-      }
-
+      if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) { const startLineEnd = text.indexOf("\n", startMarker); text = text.substring(startLineEnd + 1, endMarker); }
       const rawParagraphs = text.split(/\n\s*\n/);
       const paragraphs = [];
-      
       for (let para of rawParagraphs) {
         para = para.replace(/\s+/g, ' ').trim();
         if (para.length < 30) continue;
@@ -582,37 +512,21 @@ async function downloadBook(url, title, author) {
         if (/^\d+$/.test(para)) continue;
         if (para.length < 100 && para.toUpperCase() === para) continue;
         if (para.includes('Project Gutenberg') && para.length < 200) continue;
-        if (para.includes('License') && para.length < 200) continue;
         paragraphs.push('<p>' + para + '</p>');
       }
-      
       const content = paragraphs.join('');
-
-      if (content.length < 500) {
-         console.warn("Cleaning made text too short, skipping.");
-         continue;
-      }
-      
-      await db.books.add({
-        title: title, author: author, type: 'TXT', content: content,
-        cover: '', progress: 0, folder: null, timestamp: Date.now()
-      });
-      
+      if (content.length < 500) continue;
+      await db.books.add({ title: title, author: author, type: 'TXT', content: content, cover: '', progress: 0, folder: null, timestamp: Date.now() });
       await loadBooks();
       alert(`✅ ${title} downloaded completely! Check Library.`);
       return;
-
-    } catch (e) { console.log("Proxy failed, trying next...", e); }
+    } catch (e) { console.log("Proxy failed", e); }
   }
   alert("Download failed. The file might be too large for the proxy or blocked.");
 }
 
 async function openBook(id,isPre){
-  try{
-    currentBook=await db.books.get(id);
-    if(!currentBook){ alert('Book not found'); return; }
-    await openReader();
-  }catch(err){ alert('Error: '+err.message); }
+  try{ currentBook=await db.books.get(id); if(!currentBook){ alert('Book not found'); return; } await openReader(); }catch(err){ alert('Error: '+err.message); }
 }
 
 async function openReader(){
@@ -625,49 +539,25 @@ async function openReader(){
   if(contentEl)contentEl.style.fontSize=readerFontSize+'px';
   if(readerEl)readerEl.style.display='flex';
   stopRead();
-  if(currentBook.progress){
-    const c=document.getElementById('reader-content');
-    if(c){ c.scrollTop=(currentBook.progress/100)*c.scrollHeight; updateProgressBar(); }
-  }
+  if(currentBook.progress){ const c=document.getElementById('reader-content'); if(c){ c.scrollTop=(currentBook.progress/100)*c.scrollHeight; updateProgressBar(); } }
 }
 
 function closeReader(){ saveProgress(); const readerEl=document.getElementById('reader'); if(readerEl)readerEl.style.display='none'; currentBook=null; stopRead(); }
-function handleTapZone(zone){
-  const c=document.getElementById('reader-content');
-  if(!c)return;
-  const scrollAmount=window.innerHeight*0.8;
-  if(zone==='left') c.scrollBy({top:-scrollAmount,behavior:'smooth'});
-  else if(zone==='right') c.scrollBy({top:scrollAmount,behavior:'smooth'});
-}
-function zoomIn(){ readerFontSize=Math.min(40,readerFontSize+2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; }
-function zoomOut(){ readerFontSize=Math.max(14,readerFontSize-2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; }
-async function deleteBook(){
-  if(!currentBook||!currentBook.id){ alert('Cannot delete'); return; }
-  if(!confirm('Delete?'))return;
-  try{ await db.books.delete(currentBook.id); await loadBooks(); closeReader(); }catch(err){ alert('Error: '+err.message); }
-}
-async function deleteBookFromDB(id,e){
-  if(e)e.stopPropagation();
-  if(!confirm('Delete?'))return;
-  try{ await db.books.delete(id); await loadBooks(); }catch(err){ alert('Error: '+err.message); }
-}
+function handleTapZone(zone){ const c=document.getElementById('reader-content'); if(!c)return; const scrollAmount=window.innerHeight*0.8; if(zone==='left') c.scrollBy({top:-scrollAmount,behavior:'smooth'}); else if(zone==='right') c.scrollBy({top:scrollAmount,behavior:'smooth'}); }
+function zoomIn(){ readerFontSize=Math.min(40,readerFontSize+2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; localStorage.setItem('re_fontSize', readerFontSize); document.getElementById('font-size-slider').value = readerFontSize; document.getElementById('size-val').innerText = readerFontSize; }
+function zoomOut(){ readerFontSize=Math.max(14,readerFontSize-2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; localStorage.setItem('re_fontSize', readerFontSize); document.getElementById('font-size-slider').value = readerFontSize; document.getElementById('size-val').innerText = readerFontSize; }
+async function deleteBook(){ if(!currentBook||!currentBook.id){ alert('Cannot delete'); return; } if(!confirm('Delete?'))return; try{ await db.books.delete(currentBook.id); await loadBooks(); closeReader(); }catch(err){ alert('Error: '+err.message); } }
+async function deleteBookFromDB(id,e){ if(e)e.stopPropagation(); if(!confirm('Delete?'))return; try{ await db.books.delete(id); await loadBooks(); }catch(err){ alert('Error: '+err.message); } }
 
 function toggleRead(){
-  if(isSpeaking&&!isPaused){
-    synth.pause(); isPaused=true;
-    document.getElementById('read-btn').style.display='none';
-    document.getElementById('pause-btn').style.display='inline-block';
-    document.getElementById('pause-btn').innerText='▶️ Resume';
-  }else if(isPaused){
-    synth.resume(); isPaused=false;
-    document.getElementById('pause-btn').innerText='⏸️ Pause';
-  }else{
+  if(isSpeaking&&!isPaused){ synth.pause(); isPaused=true; document.getElementById('read-btn').style.display='none'; document.getElementById('pause-btn').style.display='inline-block'; document.getElementById('pause-btn').innerText='▶️ Resume'; }
+  else if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='⏸️ Pause'; }
+  else{
     const paragraphs=Array.from(document.querySelectorAll('#reader-text-wrapper p'));
     speechQueue=paragraphs.map(p=>p.innerText.trim()).filter(t=>t.length>10);
     if(speechQueue.length===0){ const w=document.getElementById('reader-text-wrapper'); if(w)speechQueue=[w.innerText]; }
     currentSpeechIndex=0; isSpeaking=true; isPaused=false;
-    document.getElementById('read-btn').style.display='none';
-    document.getElementById('pause-btn').style.display='inline-block';
+    document.getElementById('read-btn').style.display='none'; document.getElementById('pause-btn').style.display='inline-block';
     speakNextChunk();
   }
 }
@@ -676,91 +566,38 @@ function speakNextChunk(){
   if(currentSpeechIndex>=speechQueue.length||(!isSpeaking||isPaused)){ if(currentSpeechIndex>=speechQueue.length) stopRead(); return; }
   const text=speechQueue[currentSpeechIndex];
   const paragraphs=document.querySelectorAll('#reader-text-wrapper p');
-  paragraphs.forEach((p, idx) => {
-    if (idx < currentSpeechIndex) {
-      p.classList.add('read');
-      p.classList.remove('speaking');
-    } else {
-      p.classList.remove('speaking');
-    }
-  });
-  if(paragraphs[currentSpeechIndex]){
-    paragraphs[currentSpeechIndex].classList.add('speaking');
-    paragraphs[currentSpeechIndex].scrollIntoView({behavior:'smooth',block:'center'});
-  }
+  paragraphs.forEach((p, idx) => { if (idx < currentSpeechIndex) { p.classList.add('read'); p.classList.remove('speaking'); } else { p.classList.remove('speaking'); } });
+  if(paragraphs[currentSpeechIndex]){ paragraphs[currentSpeechIndex].classList.add('speaking'); paragraphs[currentSpeechIndex].scrollIntoView({behavior:'smooth',block:'center'}); }
   currentUtterance=new SpeechSynthesisUtterance(text);
   currentUtterance.rate=ttsRate;
-  currentUtterance.onend=function(){
-    if(paragraphs[currentSpeechIndex]){
-      paragraphs[currentSpeechIndex].classList.remove('speaking');
-      paragraphs[currentSpeechIndex].classList.add('read');
-    }
-    currentSpeechIndex++;
-    setTimeout(() => speakNextChunk(), 400);
-  };
-  currentUtterance.onerror=function(){
-    console.error('TTS error:', currentUtterance.error);
-    if(paragraphs[currentSpeechIndex]){
-      paragraphs[currentSpeechIndex].classList.remove('speaking');
-    }
-    currentSpeechIndex++;
-    setTimeout(() => speakNextChunk(), 400);
-  };
+  currentUtterance.onend=function(){ if(paragraphs[currentSpeechIndex]){ paragraphs[currentSpeechIndex].classList.remove('speaking'); paragraphs[currentSpeechIndex].classList.add('read'); } currentSpeechIndex++; setTimeout(() => speakNextChunk(), 400); };
+  currentUtterance.onerror=function(){ console.error('TTS error:', currentUtterance.error); if(paragraphs[currentSpeechIndex]){ paragraphs[currentSpeechIndex].classList.remove('speaking'); } currentSpeechIndex++; setTimeout(() => speakNextChunk(), 400); };
   synth.speak(currentUtterance);
 }
 
-function pauseRead(){
-  if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='⏸️ Pause'; }
-  else{ synth.pause(); isPaused=true; document.getElementById('pause-btn').innerText='▶️ Resume'; }
-}
+function pauseRead(){ if(isPaused){ synth.resume(); isPaused=false; document.getElementById('pause-btn').innerText='⏸️ Pause'; } else{ synth.pause(); isPaused=true; document.getElementById('pause-btn').innerText='▶️ Resume'; } }
 
-function stopRead(){
-  synth.cancel(); 
-  isSpeaking=false; 
-  isPaused=false; 
-  speechQueue=[]; 
-  currentSpeechIndex=0;
-  document.querySelectorAll('#reader-text-wrapper p').forEach(el => {
-    el.classList.remove('speaking', 'read');
-  });
-  document.getElementById('read-btn').style.display='inline-block';
-  document.getElementById('pause-btn').style.display='none';
-}
+function stopRead(){ synth.cancel(); isSpeaking=false; isPaused=false; speechQueue=[]; currentSpeechIndex=0; document.querySelectorAll('#reader-text-wrapper p').forEach(el => { el.classList.remove('speaking', 'read'); }); document.getElementById('read-btn').style.display='inline-block'; document.getElementById('pause-btn').style.display='none'; }
 
 async function saveProgress(){
   if(!currentBook||!currentBook.id)return;
-  try{
-    const c=document.getElementById('reader-content');
-    if(!c)return;
-    const progress=Math.round((c.scrollTop/(c.scrollHeight-c.clientHeight))*100);
-    await db.books.update(currentBook.id,{progress:progress});
-    await loadBooks();
-    alert('✅ Saved at '+progress+'%');
-  }catch(err){ console.error('Save error:',err); }
+  try{ const c=document.getElementById('reader-content'); if(!c)return; const progress=Math.round((c.scrollTop/(c.scrollHeight-c.clientHeight))*100); await db.books.update(currentBook.id,{progress:progress}); await loadBooks(); alert('✅ Saved at '+progress+'%'); }catch(err){ console.error('Save error:',err); }
 }
 
-function updateProgressBar(){
-  if(!currentBook)return;
-  const c=document.getElementById('reader-content');
-  if(!c)return;
-  const progress=Math.round((c.scrollTop/(c.scrollHeight-c.clientHeight))*100);
-  const bar=document.getElementById('reading-progress');
-  if(bar)bar.style.width=progress+'%';
-}
+function updateProgressBar(){ if(!currentBook)return; const c=document.getElementById('reader-content'); if(!c)return; const progress=Math.round((c.scrollTop/(c.scrollHeight-c.clientHeight))*100); const bar=document.getElementById('reading-progress'); if(bar)bar.style.width=progress+'%'; }
+document.addEventListener('DOMContentLoaded',function(){ const rc=document.getElementById('reader-content'); if(rc) rc.addEventListener('scroll',updateProgressBar); });
 
-document.addEventListener('DOMContentLoaded',function(){
-  const rc=document.getElementById('reader-content');
-  if(rc) rc.addEventListener('scroll',updateProgressBar);
-});
-
-function changeSize(v){ document.body.style.fontSize=v+'px'; const el=document.getElementById('size-val'); if(el)el.innerText=v; }
-function setTheme(t){
+// --- SETTINGS FUNCTIONS WITH SAVING ---
+function changeSize(v){ document.body.style.fontSize=v+'px'; document.getElementById('size-val').innerText=v; localStorage.setItem('re_fontSize', v); }
+function setTheme(t, silent){
   if(t==='sepia'){ document.body.style.background='#f4ecd8'; document.body.style.color='#5b4636'; }
   else if(t==='dark'){ document.body.style.background='#121212'; document.body.style.color='#e0e0e0'; }
   else if(t==='high-contrast'){ document.body.style.background='#000'; document.body.style.color='#ff0'; }
   else{ document.body.style.background='#f8f9fa'; document.body.style.color='#212529'; }
+  localStorage.setItem('re_theme', t);
 }
-function setFont(f){ document.body.style.fontFamily=f; }
+function setFont(f, silent){ document.body.style.fontFamily=f; localStorage.setItem('re_font', f); }
+function updateTTSRate(v){ ttsRate=parseFloat(v); document.getElementById('rate-val').innerText=v; localStorage.setItem('re_rate', v); }
 
 document.addEventListener('DOMContentLoaded',init);
 </script>
