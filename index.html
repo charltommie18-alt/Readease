@@ -29,7 +29,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 #reader{position:fixed;top:0;left:0;right:0;bottom:0;background:white;z-index:100;display:none;flex-direction:column;padding:15px}
 #reader-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #2563eb}
 #reader-content{flex-grow:1;overflow-y:auto;padding:10px;font-size:18px}
-#reader-text-wrapper p,#reader-text-wrapper h1,#reader-text-wrapper h2,#reader-text-wrapper h3{margin:10px 0;line-height:1.8}
+#reader-text-wrapper p,#reader-text-wrapper h1,#reader-text-wrapper h2,#reader-text-wrapper h3{margin:8px 0;line-height:1.6}
 #reader-content .speaking{background-color:#fff3cd;font-weight:bold}
 #reader-controls{display:flex;gap:10px;padding:15px 0;border-top:2px solid #dee2e6}
 #reader-controls .btn{flex:1}
@@ -81,7 +81,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 
 <div id="download-section" class="section">
-<h1>🔍 Download Free Books</h1>
+<h1> Download Free Books</h1>
 <div class="warning"><strong>💡 Tip:</strong> Search our massive reliable database first. Includes 30+ guaranteed kids' & classic links!</div>
 <div style="margin:15px 0">
 <label style="display:block;margin-bottom:5px;font-weight:600">Category:</label>
@@ -99,7 +99,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <div class="nav">
 <button onclick="showSection('library',this)">📚 Library</button>
 <button class="active" onclick="showSection('download',this)"> Download</button>
-<button onclick="showSection('settings',this)">⚙️ Settings</button>
+<button onclick="showSection('settings',this)">️ Settings</button>
 </div>
 </div>
 
@@ -181,7 +181,6 @@ const categories={
   adventure:['adventure','treasure','island','journey','expedition','huckleberry','finn','robinson','crusoe','swiss','family','leagues','sea','verne']
 };
 
-// --- MASSIVELY EXPANDED DIRECT-LINK DATABASE (30+ Books) ---
 const preloadedBooksDB = [
   { title: "Alice in Wonderland", author: "Lewis Carroll", category: "children", url: "https://www.gutenberg.org/cache/epub/11/pg11.txt" },
   { title: "Peter Pan", author: "J.M. Barrie", category: "children", url: "https://www.gutenberg.org/cache/epub/16/pg16.txt" },
@@ -279,7 +278,7 @@ async function renderMyBooks(){
     
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
-    deleteBtn.innerText='🗑️';
+    deleteBtn.innerText='️';
     deleteBtn.onclick=function(e){ e.stopPropagation(); deleteBookFromDB(b.id,e); };
     
     actionsDiv.appendChild(moveBtn);
@@ -290,27 +289,19 @@ async function renderMyBooks(){
   });
 }
 
-// --- NEW: MOVE BOOK TO FOLDER FUNCTION ---
 function moveBookToFolder(bookId) {
   const folderName = prompt("Enter folder name to move to:\n(Leave blank to return to main library)");
-  if (folderName === null) return; // User cancelled
-  
+  if (folderName === null) return;
   const targetFolder = folderName.trim() === "" ? null : folderName.trim();
-  
   db.books.update(bookId, { folder: targetFolder }).then(() => {
     if (targetFolder && !folders.find(f => f.name === targetFolder)) {
       db.folders.add({ name: targetFolder, created: Date.now() }).then(() => {
-        loadFolders();
-        loadBooks();
-        alert(`✅ Moved to "${targetFolder}"`);
+        loadFolders(); loadBooks(); alert(`✅ Moved to "${targetFolder}"`);
       });
     } else {
-      loadBooks();
-      alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library");
+      loadBooks(); alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library");
     }
-  }).catch(err => {
-    alert('Error moving book: ' + err.message);
-  });
+  }).catch(err => { alert('Error moving book: ' + err.message); });
 }
 
 function showSection(name,btn){
@@ -409,23 +400,20 @@ async function searchBooks() {
 
   const resultsDiv = document.getElementById('search-results');
   if (!resultsDiv) { console.error("Results div not found!"); return; }
-  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px">🔍 Searching massive database...</div>';
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:20px"> Searching massive database...</div>';
 
-  // 1. Search expanded local database FIRST (100% reliable)
   let filteredResults = preloadedBooksDB.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(q) || book.author.toLowerCase().includes(q);
     const matchesCategory = currentCategory === 'all' || book.category === currentCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // 2. If no results, try live API as fallback
   if (filteredResults.length === 0) {
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 8000);
       const res = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(q)}`, { signal: controller.signal });
       const data = await res.json();
-      
       if (data.results && data.results.length > 0) {
         const keywords = categories[currentCategory] || [];
         for (const book of data.results.slice(0, 10)) {
@@ -444,9 +432,7 @@ async function searchBooks() {
           });
         }
       }
-    } catch(e) {
-      console.log("API search failed, showing preloaded fallback");
-    }
+    } catch(e) { console.log("API search failed, showing preloaded fallback"); }
   }
 
   if (filteredResults.length === 0) {
@@ -471,21 +457,20 @@ async function searchBooks() {
   });
 }
 
-// --- FIXED DOWNLOAD: Safer cleaning, better proxy order, longer timeout ---
+// --- FIXED DOWNLOAD: Chops text into small paragraphs so the Voice Reader doesn't crash ---
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
   
   const proxies = [
-    `https://corsproxy.io/?${encodeURIComponent(url)}`, // Most reliable for large files
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url // Direct fallback
+    url
   ];
 
   for (let proxyUrl of proxies) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       const res = await fetch(proxyUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
       
@@ -493,43 +478,44 @@ async function downloadBook(url, title, author) {
       let text = await res.text();
       if (text.length < 500) continue;
 
-      // SAFER CLEANING: Only remove if markers exist, otherwise keep the whole book
+      // Clean Gutenberg header/footer
       const startMarker = text.indexOf("*** START");
       const endMarker = text.indexOf("*** END");
       if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) {
         const startLineEnd = text.indexOf("\n", startMarker);
         text = text.substring(startLineEnd + 1, endMarker);
       }
-      
-      // If cleaning accidentally made it empty, use the original text
-      if (text.trim().length < 100) {
-         console.warn("Cleaning made text too short, using original.");
-         // Re-fetch or just use what we have if it's already decent
-      }
 
-      const content = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+      // THE FIX: Split by single newline and wrap every line in a <p> tag.
+      // This prevents the voice reader from trying to read the whole book at once and crashing.
+      const lines = text.split('\n');
+      const paragraphs = [];
+      for (let line of lines) {
+        line = line.trim();
+        // Skip empty lines, short lines (page numbers), and lines that are just dashes
+        if (line.length > 15 && !line.startsWith('***') && !line.startsWith('---')) {
+          paragraphs.push(`<p>${line}</p>`);
+        }
+      }
+      const content = paragraphs.join('');
+
+      if (content.length < 100) {
+         console.warn("Cleaning made text too short, skipping.");
+         continue;
+      }
       
       await db.books.add({
-        title: title,
-        author: author,
-        type: 'TXT',
-        content: content,
-        cover: '',
-        progress: 0,
-        folder: null, // Ensures it goes to main library, not stuck
-        timestamp: Date.now()
+        title: title, author: author, type: 'TXT', content: content,
+        cover: '', progress: 0, folder: null, timestamp: Date.now()
       });
       
       await loadBooks();
       alert(`✅ ${title} downloaded completely! Check Library.`);
       return;
 
-    } catch (e) {
-      console.log("Proxy failed, trying next...", e);
-    }
+    } catch (e) { console.log("Proxy failed, trying next...", e); }
   }
-  
-  alert("Download failed. The file might be too large for the proxy or blocked. Try a different book.");
+  alert("Download failed. The file might be too large for the proxy or blocked.");
 }
 
 async function openBook(id,isPre){
@@ -557,7 +543,6 @@ async function openReader(){
 }
 
 function closeReader(){ saveProgress(); const readerEl=document.getElementById('reader'); if(readerEl)readerEl.style.display='none'; currentBook=null; stopRead(); }
-
 function handleTapZone(zone){
   const c=document.getElementById('reader-content');
   if(!c)return;
@@ -565,16 +550,13 @@ function handleTapZone(zone){
   if(zone==='left') c.scrollBy({top:-scrollAmount,behavior:'smooth'});
   else if(zone==='right') c.scrollBy({top:scrollAmount,behavior:'smooth'});
 }
-
 function zoomIn(){ readerFontSize=Math.min(40,readerFontSize+2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; }
 function zoomOut(){ readerFontSize=Math.max(14,readerFontSize-2); const el=document.getElementById('reader-text-wrapper'); if(el)el.style.fontSize=readerFontSize+'px'; }
-
 async function deleteBook(){
   if(!currentBook||!currentBook.id){ alert('Cannot delete'); return; }
   if(!confirm('Delete?'))return;
   try{ await db.books.delete(currentBook.id); await loadBooks(); closeReader(); }catch(err){ alert('Error: '+err.message); }
 }
-
 async function deleteBookFromDB(id,e){
   if(e)e.stopPropagation();
   if(!confirm('Delete?'))return;
