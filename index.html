@@ -62,7 +62,8 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <body>
 
 <div id="library-section" class="section active">
-<h1>📚 ReadEase</h1>
+<h1> ReadEase</h1>
+<button id="back-to-lib-btn" class="btn btn-secondary" onclick="backToLibrary()" style="display:none;margin-bottom:10px">← Back to Library</button>
 <div class="upload-area" onclick="document.getElementById('file-input').click()">
 <div style="font-size:48px;margin-bottom:10px">📤</div>
 <div style="font-size:20px;font-weight:600;color:white">Tap to Upload Book</div>
@@ -89,17 +90,17 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 <div class="category-tabs">
 <button class="btn btn-secondary active" onclick="setCategory('all',this)">All</button>
-<button class="btn btn-secondary" onclick="setCategory('children',this)"> Children</button>
-<button class="btn btn-secondary" onclick="setCategory('classics',this)"> Classics</button>
-<button class="btn btn-secondary" onclick="setCategory('fiction',this)"> Fiction</button>
+<button class="btn btn-secondary" onclick="setCategory('children',this)">👶 Children</button>
+<button class="btn btn-secondary" onclick="setCategory('classics',this)">📖 Classics</button>
+<button class="btn btn-secondary" onclick="setCategory('fiction',this)">📚 Fiction</button>
 <button class="btn btn-secondary" onclick="setCategory('adventure',this)">⚔️ Adventure</button>
 </div>
 <input type="text" id="search-box" placeholder="Search (e.g., Alice, Wizard, Peter, Little Prince)..." onkeypress="if(event.key==='Enter')searchBooks()">
 <button class="btn" onclick="searchBooks()">🔍 Search</button>
 <div id="search-results"></div>
 <div class="nav">
-<button onclick="showSection('library',this)">📚 Library</button>
-<button class="active" onclick="showSection('download',this)"> Download</button>
+<button onclick="showSection('library',this)"> Library</button>
+<button class="active" onclick="showSection('download',this)">🔍 Download</button>
 <button onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
 </div>
@@ -121,7 +122,7 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="ttsRate=this.value;document.getElementById('rate-val').innerText=this.value" style="width:100%;height:40px;margin:15px 0">
 <div style="text-align:center;color:#6c757d">Speed: <span id="rate-val">0.9</span>x</div>
 <div class="nav">
-<button onclick="showSection('library',this)">📚 Library</button>
+<button onclick="showSection('library',this)"> Library</button>
 <button onclick="showSection('download',this)">🔍 Download</button>
 <button class="active" onclick="showSection('settings',this)">⚙️ Settings</button>
 </div>
@@ -144,8 +145,8 @@ input[type="text"],select{width:100%;padding:15px;border:2px solid #dee2e6;borde
 </div>
 <div id="reader-controls">
 <button class="btn" id="read-btn" onclick="toggleRead()">▶️ Read</button>
-<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">⏸️ Pause</button>
-<button class="btn btn-secondary" onclick="stopRead()">⏹️ Stop</button>
+<button class="btn btn-secondary" id="pause-btn" onclick="pauseRead()" style="display:none">️ Pause</button>
+<button class="btn btn-secondary" onclick="stopRead()">️ Stop</button>
 </div>
 </div>
 
@@ -254,9 +255,12 @@ function renderFolders(){
 async function renderMyBooks(){
   const c=document.getElementById('my-books-list');
   if(!c){ console.error("my-books-list not found"); return; }
-  const displayBooks=currentFolder?books.filter(b=>b.folder===currentFolder):books;
+  
+  // Only show books that are NOT in any folder (folder is null or undefined)
+  const displayBooks = currentFolder ? books.filter(b => b.folder === currentFolder) : books.filter(b => b.folder === null || b.folder === undefined);
+  
   if(displayBooks.length===0){
-    c.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>No books yet.<br>Upload or download some!</p></div>';
+    c.innerHTML='<div class="empty-state"><div class="empty-state-icon">📚</div><p>No books in '+(currentFolder?'"'+currentFolder+'"':'main library')+'.<br>Upload or download some!</p></div>';
     return;
   }
   c.innerHTML='';
@@ -279,7 +283,7 @@ async function renderMyBooks(){
     
     const deleteBtn=document.createElement('button');
     deleteBtn.className='btn btn-danger';
-    deleteBtn.innerText='🗑️';
+    deleteBtn.innerText='️';
     deleteBtn.onclick=function(e){ e.stopPropagation(); deleteBookFromDB(b.id,e); };
     
     actionsDiv.appendChild(moveBtn);
@@ -290,19 +294,45 @@ async function renderMyBooks(){
   });
 }
 
+function backToLibrary() {
+  currentFolder = null;
+  renderMyBooks();
+  const h1 = document.querySelector('#library-section h1');
+  if(h1) h1.innerText = '📚 ReadEase';
+  const backBtn = document.getElementById('back-to-lib-btn');
+  if(backBtn) backBtn.style.display = 'none';
+}
+
 function moveBookToFolder(bookId) {
   const folderName = prompt("Enter folder name to move to:\n(Leave blank to return to main library)");
   if (folderName === null) return;
+  
   const targetFolder = folderName.trim() === "" ? null : folderName.trim();
-  db.books.update(bookId, { folder: targetFolder }).then(() => {
-    if (targetFolder && !folders.find(f => f.name === targetFolder)) {
-      db.folders.add({ name: targetFolder, created: Date.now() }).then(() => {
-        loadFolders(); loadBooks(); alert(`✅ Moved to "${targetFolder}"`);
-      });
-    } else {
-      loadBooks(); alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library");
+  
+  try {
+    const book = books.find(b => b.id === bookId);
+    if (!book) {
+      alert('Book not found');
+      return;
     }
-  }).catch(err => { alert('Error moving book: ' + err.message); });
+    
+    if (targetFolder) {
+      let folder = folders.find(f => f.name === targetFolder);
+      if (!folder) {
+        db.folders.add({ name: targetFolder, created: Date.now() }).then(() => {
+          loadFolders();
+        });
+      }
+    }
+    
+    db.books.update(bookId, { folder: targetFolder }).then(() => {
+      loadBooks();
+      loadFolders();
+      alert(targetFolder ? `✅ Moved to "${targetFolder}"` : "✅ Moved to main library");
+    });
+  } catch (err) {
+    alert('Error moving book: ' + err.message);
+  }
 }
 
 function showSection(name,btn){
@@ -311,7 +341,14 @@ function showSection(name,btn){
   if(section)section.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  if(name==='library'){ currentFolder=null; renderMyBooks(); }
+  if(name==='library'){ 
+    currentFolder=null; 
+    const h1 = document.querySelector('#library-section h1');
+    if(h1) h1.innerText = ' ReadEase';
+    const backBtn = document.getElementById('back-to-lib-btn');
+    if(backBtn) backBtn.style.display = 'none';
+    renderMyBooks(); 
+  }
 }
 
 function setCategory(cat,btn){
@@ -350,7 +387,14 @@ async function deleteFolder(i,e){
   }catch(err){ alert('Error: '+err.message); }
 }
 
-function openFolder(name){ currentFolder=name; renderMyBooks(); }
+function openFolder(folderName){ 
+  currentFolder=folderName; 
+  renderMyBooks();
+  const h1 = document.querySelector('#library-section h1');
+  if(h1) h1.innerText = ' ' + folderName;
+  const backBtn = document.getElementById('back-to-lib-btn');
+  if(backBtn) backBtn.style.display = 'block';
+}
 
 async function handleUpload(e){
   const file=e.target.files[0];
@@ -364,11 +408,54 @@ async function handleUpload(e){
       content=await file.text();
       if(ext==='txt') content=content.split('\n\n').map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
     }else if(ext==='pdf'){
+      // FIXED PDF EXTRACTION - Creates proper paragraphs using word coordinates
       const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
       for(let i=1;i<=pdf.numPages;i++){
         const page=await pdf.getPage(i);
         const textContent=await page.getTextContent();
-        content+='<h2>Page '+i+'</h2><p>'+textContent.items.map(x=>x.str).join(' ')+'</p>';
+        const items = textContent.items.filter(item => item.str.trim().length > 0);
+        if (items.length === 0) continue;
+        
+        // Group items by line (same y-coordinate)
+        const lines = [];
+        let currentLine = { y: items[0].transform[5], words: [] };
+        
+        for (const item of items) {
+          const y = item.transform[5];
+          if (Math.abs(y - currentLine.y) < 3) {
+            currentLine.words.push(item.str);
+          } else {
+            lines.push({ y: currentLine.y, text: currentLine.words.join(' ').trim() });
+            currentLine = { y: y, words: [item.str] };
+          }
+        }
+        lines.push({ y: currentLine.y, text: currentLine.words.join(' ').trim() });
+        lines.sort((a, b) => b.y - a.y);
+        
+        // Group lines into paragraphs based on gap size
+        const paragraphs = [];
+        let currentParagraph = [lines[0].text];
+        let prevY = lines[0].y;
+        
+        for (let j = 1; j < lines.length; j++) {
+          const gap = prevY - lines[j].y;
+          const lineText = lines[j].text;
+          if (gap > 8 || lineText.length < 5) {
+            const paraText = currentParagraph.join(' ').trim();
+            if (paraText.length > 20) paragraphs.push(paraText);
+            currentParagraph = [lineText];
+          } else {
+            currentParagraph.push(lineText);
+          }
+          prevY = lines[j].y;
+        }
+        const lastPara = currentParagraph.join(' ').trim();
+        if (lastPara.length > 20) paragraphs.push(lastPara);
+        
+        content += '<h2>Page ' + i + '</h2>';
+        for (const para of paragraphs) {
+          content += '<p>' + para + '</p>';
+        }
       }
     }else if(ext==='epub'){
       const zip=await JSZip.loadAsync(await file.arrayBuffer());
@@ -458,7 +545,6 @@ async function searchBooks() {
   });
 }
 
-// --- FIXED DOWNLOAD: Creates PROPER PARAGRAPHS (not single lines) so TTS highlights stay visible ---
 async function downloadBook(url, title, author) {
   alert(`Downloading: ${title}\nPlease wait...`);
   
@@ -479,7 +565,6 @@ async function downloadBook(url, title, author) {
       let text = await res.text();
       if (text.length < 500) continue;
 
-      // Clean Gutenberg header/footer
       const startMarker = text.indexOf("*** START");
       const endMarker = text.indexOf("*** END");
       if (startMarker !== -1 && endMarker !== -1 && endMarker > startMarker) {
@@ -487,24 +572,17 @@ async function downloadBook(url, title, author) {
         text = text.substring(startLineEnd + 1, endMarker);
       }
 
-      // THE FIX: Split by DOUBLE newlines to create proper paragraphs
-      // This makes each paragraph ~3-5 sentences, so the highlight stays visible for several seconds
       const rawParagraphs = text.split(/\n\s*\n/);
       const paragraphs = [];
       
       for (let para of rawParagraphs) {
-        // Clean the paragraph
         para = para.replace(/\s+/g, ' ').trim();
-        
-        // Skip junk (short lines, page numbers, headers)
         if (para.length < 30) continue;
         if (para.startsWith('***')) continue;
-        if (/^\d+$/.test(para)) continue; // Just a number
-        if (para.length < 100 && para.toUpperCase() === para) continue; // ALL CAPS header
+        if (/^\d+$/.test(para)) continue;
+        if (para.length < 100 && para.toUpperCase() === para) continue;
         if (para.includes('Project Gutenberg') && para.length < 200) continue;
         if (para.includes('License') && para.length < 200) continue;
-        
-        // Wrap in <p> tag
         paragraphs.push('<p>' + para + '</p>');
       }
       
@@ -574,7 +652,6 @@ async function deleteBookFromDB(id,e){
   try{ await db.books.delete(id); await loadBooks(); }catch(err){ alert('Error: '+err.message); }
 }
 
-// --- FIXED TTS: Each paragraph is a full chunk, so highlight stays visible for seconds ---
 function toggleRead(){
   if(isSpeaking&&!isPaused){
     synth.pause(); isPaused=true;
@@ -585,18 +662,10 @@ function toggleRead(){
     synth.resume(); isPaused=false;
     document.getElementById('pause-btn').innerText='⏸️ Pause';
   }else{
-    // Get all paragraphs from the DOM - each one is now a full paragraph (3-5 sentences)
     const paragraphs=Array.from(document.querySelectorAll('#reader-text-wrapper p'));
     speechQueue=paragraphs.map(p=>p.innerText.trim()).filter(t=>t.length>10);
-    
-    if(speechQueue.length===0){ 
-      const w=document.getElementById('reader-text-wrapper'); 
-      if(w) speechQueue=[w.innerText]; 
-    }
-    
-    currentSpeechIndex=0; 
-    isSpeaking=true; 
-    isPaused=false;
+    if(speechQueue.length===0){ const w=document.getElementById('reader-text-wrapper'); if(w)speechQueue=[w.innerText]; }
+    currentSpeechIndex=0; isSpeaking=true; isPaused=false;
     document.getElementById('read-btn').style.display='none';
     document.getElementById('pause-btn').style.display='inline-block';
     speakNextChunk();
@@ -604,19 +673,9 @@ function toggleRead(){
 }
 
 function speakNextChunk(){
-  // Stop if we've reached the end or if paused/stopped
-  if(currentSpeechIndex>=speechQueue.length||(!isSpeaking||isPaused)){ 
-    if(currentSpeechIndex>=speechQueue.length) stopRead(); 
-    return; 
-  }
-  
+  if(currentSpeechIndex>=speechQueue.length||(!isSpeaking||isPaused)){ if(currentSpeechIndex>=speechQueue.length) stopRead(); return; }
   const text=speechQueue[currentSpeechIndex];
-  
-  // Get all paragraphs from DOM
   const paragraphs=document.querySelectorAll('#reader-text-wrapper p');
-  
-  // Remove the "currently speaking" highlight from all paragraphs
-  // But KEEP the "already read" highlight on previous ones
   paragraphs.forEach((p, idx) => {
     if (idx < currentSpeechIndex) {
       p.classList.add('read');
@@ -625,29 +684,20 @@ function speakNextChunk(){
       p.classList.remove('speaking');
     }
   });
-  
-  // Highlight the CURRENT paragraph being spoken
   if(paragraphs[currentSpeechIndex]){
     paragraphs[currentSpeechIndex].classList.add('speaking');
     paragraphs[currentSpeechIndex].scrollIntoView({behavior:'smooth',block:'center'});
   }
-  
-  // Create utterance for this full paragraph
   currentUtterance=new SpeechSynthesisUtterance(text);
   currentUtterance.rate=ttsRate;
-  
-  // When this paragraph finishes speaking
   currentUtterance.onend=function(){
-    // Mark as read (light yellow stays)
     if(paragraphs[currentSpeechIndex]){
       paragraphs[currentSpeechIndex].classList.remove('speaking');
       paragraphs[currentSpeechIndex].classList.add('read');
     }
     currentSpeechIndex++;
-    // Small pause between paragraphs for natural feel
     setTimeout(() => speakNextChunk(), 400);
   };
-  
   currentUtterance.onerror=function(){
     console.error('TTS error:', currentUtterance.error);
     if(paragraphs[currentSpeechIndex]){
@@ -656,7 +706,6 @@ function speakNextChunk(){
     currentSpeechIndex++;
     setTimeout(() => speakNextChunk(), 400);
   };
-  
   synth.speak(currentUtterance);
 }
 
@@ -671,7 +720,6 @@ function stopRead(){
   isPaused=false; 
   speechQueue=[]; 
   currentSpeechIndex=0;
-  // Remove ALL highlights
   document.querySelectorAll('#reader-text-wrapper p').forEach(el => {
     el.classList.remove('speaking', 'read');
   });
