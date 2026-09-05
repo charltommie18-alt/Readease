@@ -1,6 +1,6 @@
 /**
  * ReadEase – preloaded free catalogue (public domain only)
- * Copyrighted books (e.g. Fifty Shades, Game of Thrones) cannot be included.
+ * Copyrighted books (e.g. Fifty Shades) cannot be included.
  */
 
 const preloadedBooksDB = [
